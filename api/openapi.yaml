@@ -1,0 +1,161 @@
+openapi: 3.0.3
+info:
+  title: Anonymous Feedback API
+  version: 1.0.0
+  description: API for anonymous but owner-controlled feedback boxes
+
+servers:
+  - url: http://localhost:8000
+
+paths:
+
+  /box:
+    post:
+      summary: Create a new feedback box
+      responses:
+        '200':
+          description: Box created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uuid:
+                    type: string
+                  owner_token:
+                    type: string
+
+  /box/{uuid}/feedback:
+    post:
+      summary: Send anonymous feedback
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  maxLength: 500
+      responses:
+        '200':
+          description: Feedback created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+        '400':
+          description: Invalid input
+        '404':
+          description: Box not found
+        '429':
+          description: Too many requests
+
+  /box/{uuid}/feedbacks:
+    get:
+      summary: Get feedbacks (owner only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of feedbacks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    text:
+                      type: string
+                    created_at:
+                      type: string
+                      format: date-time
+                    reply:
+                      type: object
+                      nullable: true
+                      properties:
+                        id:
+                          type: integer
+                        text:
+                          type: string
+                        created_at:
+                          type: string
+                          format: date-time
+        '403':
+          description: Forbidden
+        '404':
+          description: Box not found
+
+  /feedback/{id}/reply:
+    post:
+      summary: Reply to feedback (owner only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+      responses:
+        '200':
+          description: Reply created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+        '403':
+          description: Forbidden
+        '404':
+          description: Feedback not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
