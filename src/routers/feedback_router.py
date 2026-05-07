@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Header, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Header, Query, status
 from sqlalchemy.orm import Session
 from src.db.database import get_db
+from src.middlewares.auth import validate_owner_token
 from src.middlewares.rate_limit import check_rate
 from src.models.box import Box
 from src.models.feedback import Feedback
@@ -14,7 +15,7 @@ router = APIRouter()
 
 @router.post("/box/{uuid}/feedback", response_model=FeedbackOut, status_code=status.HTTP_200_OK)
 def send_feedback(uuid: str, feedback: FeedbackCreate, request: Request, db: Session = Depends(get_db)):
-    check_rate(request.client.host)
+    check_rate(request.client.host, "POST:/box/{uuid}/feedback")
     box = db.query(Box).filter(Box.uuid == uuid).first()
     if box is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Box not found")
@@ -23,21 +24,24 @@ def send_feedback(uuid: str, feedback: FeedbackCreate, request: Request, db: Ses
     return created
 
 @router.get("/box/{uuid}", response_model=BoxFeedbacksResponse)
-def get_feedbacks(uuid: str, db: Session = Depends(get_db)):
+def get_feedbacks(uuid: str, token: str = Query(None), x_owner_token: str = Header(None, alias="X-Owner-Token"), db: Session = Depends(get_db)):
     box = db.query(Box).filter(Box.uuid == uuid).first()
     if box is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Box not found")
 
+    provided_token = token or x_owner_token
+    validate_owner_token(provided_token, box)
+
     feedbacks = []
     for fb in box.feedbacks:
         replies = [BoxReplyOut(id=reply.id, text=reply.text, created_at=reply.created_at.isoformat()) for reply in fb.replies]
-        feedbacks.append(BoxFeedbackOut(id=fb.id, text=fb.text, created_at=fb.created_at.isoformat(), replies=replies))
+        feedbacks.append(BoxFeedbackOut(id=fb.id, text=fb.text, status=fb.status, moderation_notes=fb.moderation_notes, created_at=fb.created_at.isoformat(), replies=replies))
 
     return BoxFeedbacksResponse(uuid=box.uuid, feedbacks=feedbacks)
 
 @router.post("/feedback/{id}/reply", response_model=ReplyOut, status_code=status.HTTP_200_OK)
-def reply(id: int, request: Request, reply_data: ReplyCreate, x_owner_token: str = Header(None, alias="X-Owner-Token"), db: Session = Depends(get_db)):
-    check_rate(request.client.host)
+def reply(id: int, request: Request, reply_data: ReplyCreate, token: str = Query(None), x_owner_token: str = Header(None, alias="X-Owner-Token"), db: Session = Depends(get_db)):
+    check_rate(request.client.host, "POST:/feedback/{id}/reply")
     feedback = db.query(Feedback).filter(Feedback.id == id).first()
     if feedback is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Feedback not found")
@@ -46,8 +50,8 @@ def reply(id: int, request: Request, reply_data: ReplyCreate, x_owner_token: str
     if box is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Box not found")
 
-    if not x_owner_token or x_owner_token != box.owner_token:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid owner token")
+    provided_token = token or x_owner_token
+    validate_owner_token(provided_token, box)
 
     created = create_reply(db, feedback.id, reply_data.text)
     return ReplyOut(id=created.id, text=created.text, created_at=created.created_at.isoformat())

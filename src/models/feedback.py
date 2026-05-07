@@ -9,6 +9,8 @@ class Feedback(Base):
     id = Column(Integer, primary_key=True)
     box_id = Column(Integer, ForeignKey("boxes.id"), nullable=False)
     text = Column(String, nullable=False)
+    status = Column(String, nullable=False, default="approved")
+    moderation_notes = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     box = relationship("Box", back_populates="feedbacks")

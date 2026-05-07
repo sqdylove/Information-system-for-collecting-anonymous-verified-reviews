@@ -15,6 +15,8 @@ class ReplyOut(BaseModel):
 class FeedbackOut(BaseModel):
     id: int
     text: str
+    status: str
+    moderation_notes: str | None = None
     created_at: str
     replies: List[ReplyOut] = []
 
