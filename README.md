@@ -76,6 +76,7 @@ B3 --> B1
 
 - Импортируйте `openapi.yaml` в Swagger Editor, Postman или Insomnia.
 - Разработчики backend должны реализовать API согласно спецификации.
+- Перед запуском заполните `.env` с `TELEGRAM_BOT_TOKEN` и `API_BASE_URL`.
 - Запустите локально с Docker: `docker compose up --build`.
 
 ## Возможности

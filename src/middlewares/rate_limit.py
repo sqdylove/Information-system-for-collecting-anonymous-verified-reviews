@@ -2,7 +2,7 @@ from time import time
 from fastapi import HTTPException, status
 
 requests = {}
-MAX_REQUESTS = 8
+MAX_REQUESTS = 10
 WINDOW_SECONDS = 60
 
 
