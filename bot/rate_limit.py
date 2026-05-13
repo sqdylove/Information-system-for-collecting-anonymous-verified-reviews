@@ -13,7 +13,7 @@ class ActionRateLimiter:
     """
 
     requests: DefaultDict[tuple[int, str], list[float]] = field(default_factory=dict)
-    max_requests: int = 5
+    max_requests: int = 10
     window_seconds: int = 60
 
     def allow(self, user_id: int, action: str) -> bool:
