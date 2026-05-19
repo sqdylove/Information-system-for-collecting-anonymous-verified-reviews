@@ -9,13 +9,14 @@ interface Props {
 	isAuth?: boolean
 	setIsAuth: (value: boolean) => void
 }
+
 export default function AdminPanel({ setIsAuth }: Props) {
 	const [ActiveTab, setActiveTab] = useState<"statistics" | "links" | "reviews">("statistics")
 	const [totalReviews, setTotalReviews] = useState<number>(1248)
 	const [moderatedReviews, setModeratedReviews] = useState<number>(1062)
 	const [blockedReviews, setBlockedReviews] = useState<number>(174)
 	return (
-		<div className="h-screen p-6 text-white grid grid-cols-[350px_1fr] gap-4">
+		<div className="h-screen p-6 text-white grid grid-cols-[350px_1fr] gap-4 overflow-hidden">
 			<Card className="h-full">
 				<div className="h-full flex flex-col justify-between">
 					<div className="w-full flex flex-col gap-3">
@@ -32,8 +33,12 @@ export default function AdminPanel({ setIsAuth }: Props) {
 				ActiveTab === "statistics" ? (
 					<Statistics
 						totalReviews={totalReviews}
+						setTotalReviews={setTotalReviews}
 						moderatedReviews={moderatedReviews}
-						blockedReviews={blockedReviews} />
+						setModeratedReviews={setModeratedReviews}
+						blockedReviews={blockedReviews}
+						setBlockedReviews={setBlockedReviews}
+					/>
 				) :
 					ActiveTab === "links" ? (
 						<Links />
@@ -45,6 +50,7 @@ export default function AdminPanel({ setIsAuth }: Props) {
 		</div>
 	);
 }
+
 interface StatProps {
 	totalReviews: number
 	setTotalReviews?: (value: number) => void
@@ -53,44 +59,53 @@ interface StatProps {
 	blockedReviews: number
 	setBlockedReviews?: (value: number) => void
 }
-const Statistics = ({ totalReviews, moderatedReviews, blockedReviews }: StatProps) => {
+
+const Statistics = ({
+	totalReviews,
+	setTotalReviews,
+	moderatedReviews,
+	setModeratedReviews,
+	blockedReviews,
+	setBlockedReviews
+}: StatProps) => {
 	const [totalReviewsPercent, setTotalReviewsPrecent] = useState<number>(totalReviews * 0.4 / 34)
 	const [moderatedReviewsPercent, setModeratedReviewsPercent] = useState<number>(moderatedReviews * 0.4 / 34)
 	const [blockedReviewsPercent, setBlockedReviewsPercent] = useState<number>(blockedReviews * 0.5 / 34)
+
 	return (
-		<div className="h-[calc(100vh-3rem)] grid grid-rows-[200px_1fr_340px] gap-4 min-h-0">
-			<div className="grid grid-cols-[1.2fr_1.4fr_1.2fr_1.2fr_1.4fr_1.8fr] gap-4 w-full">
-				<Card className="h-50 p-4 w-auto flex flex-col justify-between items-center">
-					<h2 className="text-md text-center">Всего отзывов</h2>
-					<h3 className="text-t-blue text-5xl text-center font-bold">{totalReviews.toLocaleString('en-US')}</h3>
-					<h2 className="text-t-main text-center">+{totalReviewsPercent.toFixed(1)}% за неделю</h2>
+		<div className="h-[calc(100vh-3rem)] grid grid-rows-[110px_1fr_280px] gap-4 min-h-0 overflow-hidden">
+
+			<div className="grid grid-cols-[1.2fr_1.4fr_1.2fr_1.2fr_1.4fr_1.8fr] gap-4 w-full min-h-0">
+				<Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
+					<h2 className="text-xs text-center text-t-muted truncate w-full">Всего отзывов</h2>
+					<h3 className="text-2xl font-bold text-t-blue truncate w-full text-center leading-none">{totalReviews.toLocaleString('en-US')}</h3>
+					<h2 className="text-[11px] text-center text-t-main truncate w-full">+{totalReviewsPercent.toFixed(1)}% за неделю</h2>
 				</Card>
 
-				<Card className="h-50 p-4 w-auto flex flex-col justify-between items-center">
-					<h2 className="text-md text-center">Прошли модерацию</h2>
-					<h3 className="text-t-green text-5xl text-center font-bold">{moderatedReviews.toLocaleString('en-US')}</h3>
-					<h2 className="text-t-main text-center">+{moderatedReviewsPercent.toFixed(1)}% от всех</h2>
+				<Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
+					<h2 className="text-xs text-center text-t-muted truncate w-full">Прошли модерацию</h2>
+					<h3 className="text-2xl font-bold text-t-green truncate w-full text-center leading-none">{moderatedReviews.toLocaleString('en-US')}</h3>
+					<h2 className="text-[11px] text-center text-t-main truncate w-full">+{moderatedReviewsPercent.toFixed(1)}% от всех</h2>
 				</Card>
 
-				<Card className="h-50 p-4 w-auto flex flex-col justify-between items-center">
-					<h2 className="text-md text-center">Заблокировано</h2>
-					<h3 className="text-t-red text-5xl text-center font-bold">{blockedReviews.toLocaleString('en-US')}</h3>
-					<h2 className="text-t-main text-center">+{blockedReviewsPercent.toFixed(1)}% за неделю</h2>
+				<Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
+					<h2 className="text-xs text-center text-t-muted truncate w-full">Заблокировано</h2>
+					<h3 className="text-2xl font-bold text-t-red truncate w-full text-center leading-none">{blockedReviews.toLocaleString('en-US')}</h3>
+					<h2 className="text-[11px] text-center text-t-main truncate w-full">+{blockedReviewsPercent.toFixed(1)}% за неделю</h2>
 				</Card>
 
-				<Card className="h-50"> </Card>
-				<Card className="h-50"> </Card>
-				<Card className="h-50"> </Card>
+				<Card className="h-full"> </Card>
+				<Card className="h-full"> </Card>
+				<Card className="h-full"> </Card>
 			</div>
-
 			<div className="grid grid-cols-2 gap-4 min-h-0">
-				<Card className="h-full min-h-0 flex flex-col">
-					<div className="flex flex-row justify-between mb-2">
-						<h2 className="text-[17px] font-normal">Последние отзывы</h2>
-						<p className="text-t-muted text-sm cursor-pointer">Смотреть все</p>
+				<Card className="h-full min-h-0 flex flex-col p-4! overflow-hidden">
+					<div className="flex flex-row justify-between mb-2 shrink-0">
+						<h2 className="text-[16px] font-normal">Последние отзывы</h2>
+						<p className="text-t-muted text-sm cursor-pointer hover:text-white transition-colors">Смотреть все</p>
 					</div>
 
-					<div className="overflow-y-auto flex-1 pr-1">
+					<div className="overflow-y-auto flex-1 pr-1 custom-scroll">
 						{Array.from({ length: 10 }).map((_, index) => (
 							<Review
 								key={index}
@@ -102,13 +117,13 @@ const Statistics = ({ totalReviews, moderatedReviews, blockedReviews }: StatProp
 					</div>
 				</Card>
 
-				<Card className="h-full min-h-0 flex flex-col">
-					<div className="flex flex-row justify-between mb-2">
-						<h2 className="text-[17px] font-normal">UUID ссылки</h2>
-						<p className="text-t-muted text-sm cursor-pointer">Смотреть все</p>
+				<Card className="h-full min-h-0 flex flex-col p-4! overflow-hidden">
+					<div className="flex flex-row justify-between mb-2 shrink-0">
+						<h2 className="text-[16px] font-normal">UUID ссылки</h2>
+						<p className="text-t-muted text-sm cursor-pointer hover:text-white transition-colors">Смотреть все</p>
 					</div>
 
-					<div className="overflow-y-auto flex-1 pr-1">
+					<div className="overflow-y-auto flex-1 pr-1 custom-scroll">
 						{Array.from({ length: 10 }).map((_, index) => {
 							const randomStatus = Math.random() < 0.5 ? "Активна" : "Неактивна";
 							const randomClicks = Math.floor(Math.random() * 150).toString();
@@ -125,11 +140,11 @@ const Statistics = ({ totalReviews, moderatedReviews, blockedReviews }: StatProp
 					</div>
 				</Card>
 			</div>
-			<div className="grid grid-cols-[1.5fr_1fr] gap-4">
+			<div className="grid grid-cols-[1.5fr_1fr] gap-4 min-h-0 overflow-hidden h-full">
 				<ActivityChart />
-				<Card className="h-full flex flex-col justify-between p-6!">
-					<h2 className="text-[17px] font-normal mb-4">Состояние системы</h2>
-					<div className="flex-1 flex flex-col justify-between border border-ui-border/50 rounded-xl overflow-hidden bg-zinc-950/20">
+				<Card className="h-full flex flex-col justify-between p-4! overflow-hidden">
+					<h2 className="text-[16px] font-normal mb-2 shrink-0">Состояние системы</h2>
+					<div className="flex-1 flex flex-col justify-between border border-ui-border/50 rounded-xl bg-zinc-950/20 min-h-0 overflow-hidden">
 						{[
 							{ name: "API сервис", status: "Работает", ok: true },
 							{ name: "База данных", status: "Не работает", ok: false },
@@ -139,11 +154,11 @@ const Statistics = ({ totalReviews, moderatedReviews, blockedReviews }: StatProp
 						].map((service, index, arr) => (
 							<div
 								key={service.name}
-								className={`flex flex-row justify-between items-center px-5 py-3 text-sm
+								className={`flex flex-row justify-between items-center px-4 text-sm flex-1
                     ${index !== arr.length - 1 ? 'border-b border-ui-border/40' : ''}`}
 							>
-								<span className="text-t-main">{service.name}</span>
-								<span className={`font-medium ${service.ok ? 'text-t-green' : 'text-t-red'}`}>
+								<span className="text-t-main truncate mr-2">{service.name}</span>
+								<span className={`font-medium shrink-0 ${service.ok ? 'text-t-green' : 'text-t-red'}`}>
 									{service.status}
 								</span>
 							</div>
@@ -151,19 +166,11 @@ const Statistics = ({ totalReviews, moderatedReviews, blockedReviews }: StatProp
 					</div>
 				</Card>
 			</div>
-
 		</div>
-
-	)
-}
-const Links = () => {
-	return (
-		<div>links</div>
-	)
-}
-const Reviews = () => {
-	return (
-		<div>reviews</div>
 	)
 }
 
+
+
+const Links = () => { return <div>links</div> }
+const Reviews = () => { return <div>reviews</div> }
