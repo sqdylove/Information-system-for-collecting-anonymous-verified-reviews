@@ -9,7 +9,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>,
 )
 
-// Use contextBridge
-window.ipcRenderer.on('main-process-message', (_event, message) => {
-  console.log(message)
-})
+// Electron IPC is only available in the Electron renderer environment.
+const electronIpc = (window as any).ipcRenderer
+if (electronIpc && typeof electronIpc.on === 'function') {
+  electronIpc.on('main-process-message', (_event: unknown, message: unknown) => {
+    console.log(message)
+  })
+}
