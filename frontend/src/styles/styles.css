@@ -12,14 +12,48 @@
     --color-status-anonymous: #6b7280;
 
     /* Интерфейсные цвета (Фон и панели) */
-    --color-ui-main: #030A1A; /* background */
-    --color-ui-card: #070F22; /* card */
-    --color-ui-border: #252E41; /* border */
+    --color-ui-main: #030A1A;
+    /* background */
+    --color-ui-card: #070F22;
+    /* card */
+    --color-ui-border: #252E41;
+    /* border */
 
     /* Типографика (Текст) */
     --color-t-main: #FFFFFF;
     --color-t-muted: #8E909C;
+    --color-t-blue: #45549F;
+    --color-t-green: #40D1AA;
+    --color-t-red: #F57665;
     /* --color-text-light: #9ca3af; */
+}
+.overflow-y-auto {
+  /* Ширина скроллбара */
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  /* Трек (фон, на котором двигается бегунок) — делаем полностью прозрачным */
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* Сам бегунок (ползунок) */
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2); /* Полупрозрачный белый цвет */
+    border-radius: 9999px; /* Идеально закругленный */
+  }
+
+  /* Эффект при наведении на ползунок (становится чуть ярче) */
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+  }
+
+  /* Кнопки-стрелочки сверху и снизу — просто убираем их отображение */
+  &::-webkit-scrollbar-button {
+    display: none;
+  }
 }
 
 /* 
