@@ -172,5 +172,52 @@ const Statistics = ({
 
 
 
-const Links = () => { return <div>links</div> }
-const Reviews = () => { return <div>reviews</div> }
+const Links = () => {
+	return (
+		<>
+			<div className="h-full">
+				<div className="w-full flex flex-row justify-end gap-6 mb-3">
+					<Button className="pl-16 pr-16" text={"Обновить"}></Button>
+					<Button className="pl-16 pr-16" text={"Создать ссылку"}></Button>
+				</div>
+				<div className="h-[calc(100vh-8rem)] flex flex-col gap-4 min-h-0 overflow-y-auto flex-1 pr-1 custom-scroll">
+					{Array.from({ length: 15 }).map((_, index) => {
+						const randomStatus = Math.random() < 0.5 ? "Активна" : "Неактивна";
+						const randomClicks = Math.floor(Math.random() * 150).toString();
+						return (
+							<UUIDLink
+								key={index}
+								clicks={randomClicks}
+								UUID={`cds321-zxc342-nhg64y6-xcvb6-mnf49m`}
+								date={"24.05.2026"}
+								isActive={randomStatus}
+								UUIDScreen
+							/>
+						);
+					})}
+				</div>
+			</div>
+		</>
+	)
+}
+const Reviews = () => {
+	return (
+		<>
+			<div className="h-full">
+				<div className="w-full flex flex-row justify-end gap-6 mb-3">
+					<Button className="pl-16 pr-16" text={"Обновить"}></Button>
+				</div>
+				<div className="h-[calc(100vh-8rem)] flex flex-col gap-4 min-h-0 overflow-y-auto flex-1 pr-1 custom-scroll">
+					{Array.from({ length: 10 }).map((_, index) => (
+						<Review
+							key={index}
+							title={"Lorem ipsum..."}
+							UUID={"cds321-zxc342-nhg64y6-xcvb6-mnf49m"}
+							timeAgo={"2 minuts ago"}
+						/>
+					))}
+				</div>
+			</div>
+		</>
+	)
+}
