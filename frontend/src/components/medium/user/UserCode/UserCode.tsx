@@ -3,16 +3,20 @@ import Card from "../../../small/card/card";
 import Input from "../../../small/input/input";
 
 interface Props {
-    className?: string;
+  className?: string;
 }
 export default function UserCode({ className = "" }: Props) {
-    return (
-        <Card className={`${className}`}>
-            <h1 className="mb-1 leading-relaxed">Код доступа получателя</h1>
-            <p className="text-t-muted mb-3">Введите уникальный UUID получателя, чтобы отправить отзыв</p>
-            <Input className="mb-3" placeholder="Введите UUID-код" w="full" />
-            <Button className="mb-3" text="Продолжить" w="full" />
-            <p className="text-t-muted text-xs mb-2">UUID обеспечивает доставку только нужному получателю</p>
-        </Card>
-    )
+  return (
+    <Card className={`${className}`}>
+      <h1 className="mb-1 leading-relaxed">Код доступа получателя</h1>
+      <p className="text-t-muted mb-3">
+        Введите уникальный UUID получателя, чтобы отправить отзыв
+      </p>
+      <Input className="mb-3" placeholder="Введите UUID-код" w="full" />
+      <Button className="mb-3" text="Продолжить" w="full" />
+      <p className="text-t-muted text-xs mb-2">
+        UUID обеспечивает доставку только нужному получателю
+      </p>
+    </Card>
+  );
 }

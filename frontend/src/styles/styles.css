@@ -2,30 +2,30 @@
 @tailwind utilities;
 
 @theme {
-    /* Фирменные акцентные цвета (Брендинг) */
-    --color-brand-primary: #4f46e5;
-    --color-brand-hover: #4338ca;
+  /* Фирменные акцентные цвета (Брендинг) */
+  --color-brand-primary: #4f46e5;
+  --color-brand-hover: #4338ca;
 
-    /* Статусы верификации отзывов */
-    --color-status-verified: #10b981;
-    --color-status-bg: #ecfdf5;
-    --color-status-anonymous: #6b7280;
+  /* Статусы верификации отзывов */
+  --color-status-verified: #10b981;
+  --color-status-bg: #ecfdf5;
+  --color-status-anonymous: #6b7280;
 
-    /* Интерфейсные цвета (Фон и панели) */
-    --color-ui-main: #030A1A;
-    /* background */
-    --color-ui-card: #070F22;
-    /* card */
-    --color-ui-border: #252E41;
-    /* border */
+  /* Интерфейсные цвета (Фон и панели) */
+  --color-ui-main: #030a1a;
+  /* background */
+  --color-ui-card: #070f22;
+  /* card */
+  --color-ui-border: #252e41;
+  /* border */
 
-    /* Типографика (Текст) */
-    --color-t-main: #FFFFFF;
-    --color-t-muted: #8E909C;
-    --color-t-blue: #45549F;
-    --color-t-green: #40D1AA;
-    --color-t-red: #F57665;
-    /* --color-text-light: #9ca3af; */
+  /* Типографика (Текст) */
+  --color-t-main: #ffffff;
+  --color-t-muted: #8e909c;
+  --color-t-blue: #45549f;
+  --color-t-green: #40d1aa;
+  --color-t-red: #f57665;
+  /* --color-text-light: #9ca3af; */
 }
 .overflow-y-auto {
   /* Ширина скроллбара */
