@@ -1,6 +1,6 @@
-import Button from "../../small/button/button";
-import Card from "../../small/card/card";
-import Input from "../../small/input/input";
+import Button from "../../../small/button/button";
+import Card from "../../../small/card/card";
+import Input from "../../../small/input/input";
 
 interface Props {
     className?: string;
