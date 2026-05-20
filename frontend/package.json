@@ -13,7 +13,8 @@
     "watch:css": "tailwindcss -i ./src/styles/styles.css -o ./src/styles/style.css --watch",
     "tailwind:watch": "tailwindcss -i ./src/styles/styles.css -o ./src/styles/style.css --watch",
     "electron:start": "vite --host",
-    "start": "concurrently \"npm run tailwind:watch\" \"npm run electron:start\""
+    "start": "concurrently \"npm run tailwind:watch\" \"npm run electron:start\"",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,md,json}\""
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.3.0",
@@ -35,6 +36,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "prettier": "^3.8.3",
     "typescript": "^5.2.2",
     "vite": "^5.1.6",
     "vite-plugin-electron": "^0.28.6",
