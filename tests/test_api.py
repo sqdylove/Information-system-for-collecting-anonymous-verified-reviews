@@ -2,7 +2,10 @@ import os
 import importlib
 from fastapi.testclient import TestClient
 
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+os.environ.setdefault(
+    "DATABASE_URL",
+    "postgresql://admin:adminadmin@localhost:5433/anonymous",
+)
 import src.db.database as database
 importlib.reload(database)
 database.init_db()
