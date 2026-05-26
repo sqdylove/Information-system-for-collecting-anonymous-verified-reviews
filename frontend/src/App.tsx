@@ -1,5 +1,5 @@
 import AdminScreen from "./components/screens/AdminScreen";
-import UserScreen from "./components/screens/UserScreen";
+import MainScreen from "./components/screens/mainScreen";
 
 function App() {
   const isElectron =
@@ -8,7 +8,7 @@ function App() {
   if (isElectron) {
     return <AdminScreen />;
   } else {
-    return <UserScreen />;
+    return <MainScreen />;
   }
 }
 
