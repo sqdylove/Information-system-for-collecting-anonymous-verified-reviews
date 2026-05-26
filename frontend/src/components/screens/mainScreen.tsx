@@ -7,12 +7,10 @@ import AdminScreen from "./AdminScreen";
 export default function MainScreen() {
   const [screen, setScreen] = useState<"main" | "sender" | "recipient">("main");
   if (screen === "sender") {
-    return <UserScreen />
+    return <UserScreen screen={screen} setScreen={setScreen} />
   }
-
   if (screen === "recipient") {
-    return <AdminScreen />
-    //<div className="text-white p-8">Экран получателя <button onClick={() => setScreen("main")}>Назад</button></div>;
+    return <AdminScreen screen={screen} setScreen={setScreen}/>
   }
   return (
     <div className="min-h-screen w-screen flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto overflow-x-hidden select-none text-white relative">
@@ -35,7 +33,8 @@ export default function MainScreen() {
           <p className="text-t-muted text-xs mb-4">Выберите отправителя или получателя</p>
           <div className="flex flex-row justify-between items-center gap-4 w-full">
             <Button text={"Войти как отправитель"} onClick={() => setScreen("sender")}></Button>
-            <Button text={"Войти как получатель"} onClick={() => setScreen("recipient")}></Button>          </div>
+            <Button text={"Войти как получатель"} onClick={() => setScreen("recipient")}></Button>
+          </div>
         </Card>
 
       </div>

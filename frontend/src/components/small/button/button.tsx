@@ -1,15 +1,19 @@
+import { ReactNode } from "react";
+
 interface ButtonProps {
   text: string;
   w?: "full" | "fit";
   className?: string;
   onClick?: () => void;
+  children?: ReactNode
 }
 
 export default function Button({
   text,
   w = "fit",
   className,
-  onClick = () => {},
+  onClick = () => { },
+  children
 }: ButtonProps) {
   const fontStyles = "text-white font-normal text-[15px]";
   const baseStyles =
@@ -21,7 +25,7 @@ export default function Button({
       onClick={onClick}
       className={`${width} ${baseStyles} ${fontStyles} ${hoverStyles} hover:scale-99 ${className}`}
     >
-      {text}
+      {text || children}
     </button>
   );
 }
