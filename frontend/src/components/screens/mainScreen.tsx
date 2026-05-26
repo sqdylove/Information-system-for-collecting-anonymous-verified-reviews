@@ -6,11 +6,18 @@ import AdminScreen from "./AdminScreen";
 
 export default function MainScreen() {
   const [screen, setScreen] = useState<"main" | "sender" | "recipient">("main");
+  const [UUID, setUUID] = useState<string | null>(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    return queryParams.get("uuid") || null;
+  });
+  if (UUID != null) {
+    return <UserScreen UUIDCODE={UUID} screen={screen} setScreen={setScreen} />
+  }
   if (screen === "sender") {
     return <UserScreen screen={screen} setScreen={setScreen} />
   }
   if (screen === "recipient") {
-    return <AdminScreen screen={screen} setScreen={setScreen}/>
+    return <AdminScreen screen={screen} setScreen={setScreen} />
   }
   return (
     <div className="min-h-screen w-screen flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto overflow-x-hidden select-none text-white relative">

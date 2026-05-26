@@ -6,13 +6,17 @@ import UserReview from "../medium/user/UserReview/UserReview";
 interface UserScreenProps {
   screen: string;
   setScreen: (value: "main" | "sender" | "recipient") => void
+  UUIDCODE?: string
 }
 
 export default function UserScreen({
   screen,
-  setScreen
+  setScreen,
+  UUIDCODE
 }: UserScreenProps) {
-  const [UUID, setUUID] = useState<string | null>(null);
+  const [UUID, setUUID] = useState<string | null>(() => {
+    return UUIDCODE || null;
+  });
   return (
     <div className="h-full w-screen flex flex-col items-center p-4 md:p-8 pt-8 pb-4 overflow-y-auto overflow-x-hidden select-none text-white relative">
       <div className="flex-1 w-full flex flex-col justify-center items-center gap-6">
