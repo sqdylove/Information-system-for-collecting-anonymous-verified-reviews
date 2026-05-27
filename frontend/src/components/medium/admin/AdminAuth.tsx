@@ -27,6 +27,9 @@ interface CardProps {
   setScreen: (value: "main" | "sender" | "recipient") => void
 }
 const Login = ({ setIsLogin, setIsAuth, setScreen }: CardProps) => {
+  const isElectron =
+    typeof window !== "undefined" &&
+    navigator.userAgent.toLowerCase().includes("electron");
   return (
     <Card className="w-2xl h-auto flex flex-col gap-4">
       <div className="flex flex-row justify-between">
@@ -34,26 +37,30 @@ const Login = ({ setIsLogin, setIsAuth, setScreen }: CardProps) => {
           <h1 className="text-[19px]">Авторизация получателя</h1>
           <p className="text-sm text-t-muted">Введите логин и пароль</p>
         </div>
-        <button
-          onClick={() => setScreen('main')}
-          className="p-2 max-h-8 flex items-center border border-ui-border rounded-lg text-xs text-t-muted hover:text-white hover:bg-zinc-900 transition-all cursor-pointer select-none"
-          title="Вернуться назад"
-        >
-          <svg
-            xmlns="http://w3.org"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="m15 18-6-6 6-6" />
-          </svg>
-          <span>Назад</span>
-        </button>
+        {
+          isElectron ? null : (
+            <button
+              onClick={() => setScreen('main')}
+              className="p-2 max-h-8 flex items-center border border-ui-border rounded-lg text-xs text-t-muted hover:text-white hover:bg-zinc-900 transition-all cursor-pointer select-none"
+              title="Вернуться назад"
+            >
+              <svg
+                xmlns="http://w3.org"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m15 18-6-6 6-6" />
+              </svg>
+              <span>Назад</span>
+            </button>
+          )
+        }
       </div>
       <Input w="full" placeholder="Введите логин" />
       <Input w="full" placeholder="Введите пароль" />
