@@ -1,0 +1,72 @@
+@import "tailwindcss";
+@tailwind utilities;
+
+@theme {
+  /* Фирменные акцентные цвета (Брендинг) */
+  --color-brand-primary: #4f46e5;
+  --color-brand-hover: #4338ca;
+
+  /* Статусы верификации отзывов */
+  --color-status-verified: #10b981;
+  --color-status-bg: #ecfdf5;
+  --color-status-anonymous: #6b7280;
+
+  /* Интерфейсные цвета (Фон и панели) */
+  --color-ui-main: #030a1a;
+  /* background */
+  --color-ui-card: #070f22;
+  /* card */
+  --color-ui-border: #252e41;
+  /* border */
+
+  /* Типографика (Текст) */
+  --color-t-main: #ffffff;
+  --color-t-muted: #8e909c;
+  --color-t-blue: #45549f;
+  --color-t-green: #40d1aa;
+  --color-t-red: #f57665;
+  --color-t-purple:#9E30C9;
+  --color-t-yellow:#D1B440;
+  --color-t-orange:#D17340;
+  /* --color-text-light: #9ca3af; */
+}
+.overflow-y-auto {
+  /* Ширина скроллбара */
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  /* Трек (фон, на котором двигается бегунок) — делаем полностью прозрачным */
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* Сам бегунок (ползунок) */
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2); /* Полупрозрачный белый цвет */
+    border-radius: 9999px; /* Идеально закругленный */
+  }
+
+  /* Эффект при наведении на ползунок (становится чуть ярче) */
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+  }
+
+  /* Кнопки-стрелочки сверху и снизу — просто убираем их отображение */
+  &::-webkit-scrollbar-button {
+    display: none;
+  }
+}
+
+/* 
+background: #252E41;
+background: #FFFFFF;
+background: #070F22;
+background: #8E909C;
+background: #030A1A;
+background: #0A1120;
+
+*/
+/* ФАЙЛ ДЛЯ НАПИСАНИЯ СТИЛЕЙ */
+/* Файл - styles.css - автосгенерированные классы tailwind */
