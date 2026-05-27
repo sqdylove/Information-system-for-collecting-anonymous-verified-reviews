@@ -25,6 +25,9 @@
   --color-t-blue: #45549f;
   --color-t-green: #40d1aa;
   --color-t-red: #f57665;
+  --color-t-purple:#9E30C9;
+  --color-t-yellow:#D1B440;
+  --color-t-orange:#D17340;
   /* --color-text-light: #9ca3af; */
 }
 .overflow-y-auto {

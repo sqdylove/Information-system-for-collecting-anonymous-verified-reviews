@@ -86,6 +86,13 @@ const Statistics = ({
   const [blockedReviewsPercent, setBlockedReviewsPercent] = useState<number>(
     (blockedReviews * 0.5) / 34
   );
+  const [uuidLinks, setUuidLinks] = useState<number>(10);
+  const [uuidLinksPercent, setUuidLinksPercent] = useState<number>(5);
+
+  const [clicksCount, setClicksCount] = useState<number>(23);
+  const [clicksPercent, setClicksPercent] = useState<number>(12);
+
+  const [lastReviewDate, setLastReviewDate] = useState<string>("24.05.2026");
 
   return (
     <div className="h-[calc(100vh-3rem)] grid grid-rows-[110px_1fr_280px] gap-4 min-h-0 overflow-hidden">
@@ -98,7 +105,7 @@ const Statistics = ({
             {totalReviews.toLocaleString("en-US")}
           </h3>
           <h2 className="text-[11px] text-center text-t-main truncate w-full">
-            +{totalReviewsPercent.toFixed(1)}% за неделю
+            +{totalReviewsPercent.toFixed(0)}% за неделю
           </h2>
         </Card>
 
@@ -110,7 +117,7 @@ const Statistics = ({
             {moderatedReviews.toLocaleString("en-US")}
           </h3>
           <h2 className="text-[11px] text-center text-t-main truncate w-full">
-            +{moderatedReviewsPercent.toFixed(1)}% от всех
+            +{moderatedReviewsPercent.toFixed(0)}% от всех
           </h2>
         </Card>
 
@@ -122,14 +129,45 @@ const Statistics = ({
             {blockedReviews.toLocaleString("en-US")}
           </h3>
           <h2 className="text-[11px] text-center text-t-main truncate w-full">
-            +{blockedReviewsPercent.toFixed(1)}% за неделю
+            +{blockedReviewsPercent.toFixed(0)}% за неделю
           </h2>
         </Card>
 
-        <Card className="h-full"> </Card>
-        <Card className="h-full"> </Card>
-        <Card className="h-full"> </Card>
+        <Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
+          <h2 className="text-xs text-center text-t-muted truncate w-full">
+            UUID-ссылок
+          </h2>
+          <h3 className="text-2xl font-bold text-t-purple truncate w-full text-center leading-none">
+            {uuidLinks.toLocaleString("en-US")}
+          </h3>
+          <h2 className="text-[11px] text-center text-t-main truncate w-full">
+            +{uuidLinksPercent.toFixed(0)}% за неделю
+          </h2>
+        </Card>
+
+        <Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
+          <h2 className="text-xs text-center text-t-muted truncate w-full">
+            Количество переходов
+          </h2>
+          <h3 className="text-2xl font-bold text-t-yellow truncate w-full text-center leading-none">
+            {clicksCount.toLocaleString("en-US")}
+          </h3>
+          <h2 className="text-[11px] text-center text-t-main truncate w-full">
+            +{clicksPercent.toFixed(0)}% за неделю
+          </h2>
+        </Card>
+
+        <Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
+          <h2 className="text-xs text-center text-t-muted truncate w-full">
+            Дата последнего отзыва
+          </h2>
+          <h3 className="text-2xl font-bold text-t-orange truncate w-full text-center leading-none py-1">
+            {lastReviewDate}
+          </h3>
+          <div className="h-2.75" />
+        </Card>
       </div>
+
       <div className="grid grid-cols-2 gap-4 min-h-0">
         <Card className="h-full min-h-0 flex flex-col p-4! overflow-hidden">
           <div className="flex flex-row justify-between mb-2 shrink-0">

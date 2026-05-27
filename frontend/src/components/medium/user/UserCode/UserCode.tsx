@@ -21,7 +21,7 @@ export default function UserCode({ className = "", setUUID, UUIDCODE, setScreen 
           </p>
         </div>
         <button
-          onClick={() => { setUUID(null); console.log({UUIDCODE}); setScreen('main'); }}
+          onClick={() => { setUUID(null); setScreen('main'); }}
           className="p-2 max-h-8 flex items-center border border-ui-border rounded-lg text-xs text-t-muted hover:text-white hover:bg-zinc-900 transition-all cursor-pointer select-none"
           title="Вернуться назад"
         >
