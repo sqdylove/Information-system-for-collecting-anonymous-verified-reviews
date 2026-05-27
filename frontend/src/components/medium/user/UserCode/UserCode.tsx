@@ -3,12 +3,14 @@ import Card from "../../../small/card/card";
 import Input from "../../../small/input/input";
 
 interface Props {
-  setUUID: (value: string) => void;
+  setUUID: (value: string | null) => void;
   className?: string;
   screen: string;
   setScreen: (value: "main" | "sender" | "recipient") => void
+  UUIDCODE: string | null
 }
-export default function UserCode({ className = "", setUUID, setScreen }: Props) {
+
+export default function UserCode({ className = "", setUUID, UUIDCODE, setScreen }: Props) {
   return (
     <Card className={`${className}`}>
       <div className="flex flex-row justify-between">
@@ -19,7 +21,7 @@ export default function UserCode({ className = "", setUUID, setScreen }: Props) 
           </p>
         </div>
         <button
-          onClick={() => setScreen('main')}
+          onClick={() => { setUUID(null); console.log({UUIDCODE}); setScreen('main'); }}
           className="p-2 max-h-8 flex items-center border border-ui-border rounded-lg text-xs text-t-muted hover:text-white hover:bg-zinc-900 transition-all cursor-pointer select-none"
           title="Вернуться назад"
         >

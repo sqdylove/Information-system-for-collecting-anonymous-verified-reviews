@@ -7,7 +7,13 @@ interface Props {
   className?: string;
   onBack?: () => void;
 }
-
+const clearUuidParam = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  urlParams.delete("uuid");
+  const newQueryString = urlParams.toString();
+  const newRelativePath = window.location.pathname + (newQueryString ? `?${newQueryString}` : "");
+  window.history.replaceState(null, "", newRelativePath);
+};
 export default function UserReview({ className, onBack }: Props) {
   const [text, setText] = useState<string>("");
   const maxChars = 5000;
@@ -24,7 +30,7 @@ export default function UserReview({ className, onBack }: Props) {
     >
       {onBack && (
         <button
-          onClick={onBack}
+          onClick={() => { onBack(); clearUuidParam() }}
           className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1.5 border border-ui-border rounded-lg text-xs text-t-muted hover:text-white hover:bg-zinc-900 transition-all cursor-pointer select-none"
           title="Вернуться назад"
         >

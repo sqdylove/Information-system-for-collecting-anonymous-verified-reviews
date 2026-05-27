@@ -4,17 +4,19 @@ import Card from "../small/card/card";
 import UserScreen from "./UserScreen";
 import AdminScreen from "./AdminScreen";
 
-export default function MainScreen() {
-  const [screen, setScreen] = useState<"main" | "sender" | "recipient">("main");
-  const [UUID, setUUID] = useState<string | null>(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    return queryParams.get("uuid") || null;
-  });
+interface MainScreenProps {
+  UUID: string | null;
+  screen: "main" | "sender" | "recipient"
+  setScreen: (value: "main" | "sender" | "recipient") => void
+  setUUID: (value: string | null) => void
+}
+
+export default function MainScreen({ UUID, screen, setScreen, setUUID }: MainScreenProps) {
   if (UUID != null) {
-    return <UserScreen UUIDCODE={UUID} screen={screen} setScreen={setScreen} />
+    return <UserScreen UUIDCODE={UUID} screen={screen} setScreen={setScreen} UUID={UUID} setUUID={setUUID} />
   }
   if (screen === "sender") {
-    return <UserScreen screen={screen} setScreen={setScreen} />
+    return <UserScreen screen={screen} setScreen={setScreen} UUIDCODE={UUID} UUID={UUID} setUUID={setUUID} />
   }
   if (screen === "recipient") {
     return <AdminScreen screen={screen} setScreen={setScreen} />
