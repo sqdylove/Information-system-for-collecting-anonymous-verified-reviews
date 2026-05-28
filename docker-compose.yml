@@ -35,34 +35,19 @@ services:
       - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
 
   bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: on-failure:5
+    build: .
+    restart: on-failure
     depends_on:
-      - api
-      - db
+      db:
+        condition: service_healthy
+      api:
+        condition: service_started
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME:-anonymous_verified_reviews_bot}
       - API_BASE_URL=${API_BASE_URL:-http://api:8000}
       - PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL:-http://localhost:8000}
     command: ["python", "-u", "-m", "bot.main"]
-    networks:
-      - app_network
-    cap_drop:
-      - ALL
-    read_only: true
-    tmpfs:
-      - /tmp
-
-volumes:
-  db_data:
-    driver: local
-
-networks:
-  app_network:
-    driver: bridge
 
   frontend:
     build:
