@@ -1,6 +1,9 @@
+import logging
 import httpx
 from dataclasses import dataclass
 from typing import Any, Optional
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -16,33 +19,50 @@ class ApiClient:
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None:
-            # Keep-alive reduces latency for bot polling.
-            self._client = httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=5.0))
+            # Improved timeout: connect, read, write, pool
+            self._client = httpx.AsyncClient(
+                timeout=httpx.Timeout(10.0, connect=5.0, read=8.0, write=5.0),
+                limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
+                http2=False,
+            )
         return self._client
 
     async def aclose(self) -> None:
         if self._client is not None:
-            await self._client.aclose()
+            try:
+                await self._client.aclose()
+            except Exception as exc:
+                logger.error("Error closing API client: %s", exc)
             self._client = None
 
     async def _request(self, method: str, path: str, *, params: dict[str, Any] | None = None, json: Any | None = None) -> Any:
-        client = await self._get_client()
-        url = f"{self.base_url}{path}"
-        resp = await client.request(method, url, params=params, json=json)
-
-        if 200 <= resp.status_code < 300:
-            return resp.json() if resp.content else None
-
-        # FastAPI typically returns {"detail": "..."} for HTTPException.
-        detail = None
         try:
-            payload = resp.json()
-            if isinstance(payload, dict):
-                detail = payload.get("detail")
-        except Exception:
-            detail = None
+            client = await self._get_client()
+            url = f"{self.base_url}{path}"
+            resp = await client.request(method, url, params=params, json=json)
 
-        raise ApiError(status_code=resp.status_code, detail=detail or resp.text or "API error")
+            if 200 <= resp.status_code < 300:
+                return resp.json() if resp.content else None
+
+            # FastAPI typically returns {"detail": "..."} for HTTPException.
+            detail = None
+            try:
+                payload = resp.json()
+                if isinstance(payload, dict):
+                    detail = payload.get("detail")
+            except Exception:
+                detail = None
+
+            raise ApiError(status_code=resp.status_code, detail=detail or resp.text or "API error")
+        except httpx.TimeoutException as exc:
+            logger.error("API request timeout: %s", exc)
+            raise ApiError(status_code=504, detail="API request timeout")
+        except httpx.ConnectError as exc:
+            logger.error("API connection error: %s", exc)
+            raise ApiError(status_code=503, detail="API service unavailable")
+        except Exception as exc:
+            logger.error("Unexpected API error: %s", exc)
+            raise ApiError(status_code=500, detail="Unexpected error")
 
     async def create_box(self) -> dict[str, Any]:
         return await self._request("POST", "/box")
