@@ -32,7 +32,7 @@ export default function UserScreen({
           </div>
         ) : (
           <div className="w-full max-w-140 transition-all duration-300">
-            <UserReview onBack={() => { setUUID(null); setScreen("sender") }} />
+            <UserReview setUUID={setUUID} UUIDCODE={UUIDCODE} onBack={() => { setUUID(null); setScreen("sender") }} />
           </div>
         )}
       </div>

@@ -5,7 +5,9 @@ import Input from "../../../small/input/input";
 
 interface Props {
   className?: string;
+  UUIDCODE: string | null;
   onBack?: () => void;
+  setUUID: (value: string | null) => void
 }
 const clearUuidParam = () => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -14,16 +16,16 @@ const clearUuidParam = () => {
   const newRelativePath = window.location.pathname + (newQueryString ? `?${newQueryString}` : "");
   window.history.replaceState(null, "", newRelativePath);
 };
-export default function UserReview({ className, onBack }: Props) {
+export default function UserReview({ className, onBack, UUIDCODE, setUUID }: Props) {
   const [text, setText] = useState<string>("");
-  const maxChars = 5000;
+  const [textTheme, setTextTheme] = useState<string>("")
+  const maxChars = 500;
 
   const handleTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     if (e.target.value.length <= maxChars) {
       setText(e.target.value);
     }
   };
-
   return (
     <Card
       className={`relative w-full p-5 md:p-6 text-sm leading-normal ${className}`}
@@ -60,10 +62,10 @@ export default function UserReview({ className, onBack }: Props) {
         </p>
       </div>
       <label className="block mb-1.5 text-xs md:text-sm font-medium text-t-main">
-        Тема отзыва{" "}
+        Тема отзыва
         <span className="text-t-muted font-normal">(необязательно)</span>
       </label>
-      <Input w="full" placeholder="Укажите тему обращения..." />
+      <Input autoComplete="off" value={textTheme} onChange={setTextTheme} w="full" placeholder="Укажите тему обращения..." />
       <label className="block mt-4 mb-1.5 text-xs md:text-sm font-medium text-t-main">
         Ваш отзыв
       </label>
@@ -82,15 +84,50 @@ export default function UserReview({ className, onBack }: Props) {
         <Button
           text="Очистить"
           w="fit"
-          onClick={() => setText("")}
+          onClick={() => { setText(""); setTextTheme("") }}
           className="text-xs md:text-sm px-4"
         />
         <Button
           text="Отправить анонимно"
           w="fit"
           className="text-xs md:text-sm px-4 bg-brand-primary"
+          onClick={async () => {
+            console.log({ textTheme, text, UUIDCODE })
+            const feefdbackText = `${textTheme}\n${text}`
+            const res = await sendFeedback(UUIDCODE, feefdbackText)
+            console.log(res)
+            if (res.id != null || undefined) {
+              alert("Отправлено!")
+              setUUID(null)
+            }
+          }}
         />
       </div>
     </Card>
   );
 }
+const sendFeedback = async (uuid: string | null, text: string) => {
+  try {
+    if (uuid == null) throw new Error("UUID код не заполнен!")
+    const response = await fetch(`http://localhost:8000/box/${uuid}/feedback`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: text
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Ошибка при отправке отзыва");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Ошибка при отправке запроса:", error);
+    throw error;
+  }
+};

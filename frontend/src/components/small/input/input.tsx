@@ -22,7 +22,10 @@ export default function Input({
   const baseStyles =
     "bg-ui-card p-2 pl-4 pt-3 pb-3` border-ui-border border-1 rounded-[10px] opacity-100 outline-none focus:border-blue-500 transition-colors";
   const width = w === "full" ? "w-full" : "w-fit";
-  const defaultAutoComplete = autoComplete || (type === "password" ? "current-password" : "username");
+  const defaultAutoComplete = autoComplete !== undefined
+    ? (autoComplete === "off" ? (type === "password" ? "new-password" : "one-time-code") : autoComplete)
+    : (type === "password" ? "current-password" : "username");
+
   return (
     <input
       type={type}
@@ -33,4 +36,5 @@ export default function Input({
       onChange={(e) => onChange(e.target.value)}
     />
   );
+
 }

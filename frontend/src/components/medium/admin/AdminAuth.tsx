@@ -8,6 +8,7 @@ interface AuthCardProps {
   screen?: string;
   setScreen: (value: "main" | "sender" | "recipient") => void
 }
+
 export default function AuthCard({ setIsAuth, setScreen }: AuthCardProps) {
   const [isLogin, setIsLogin] = useState<boolean>(true);
   return (
@@ -30,7 +31,8 @@ const isElectron =
   typeof window !== "undefined" &&
   navigator.userAgent.toLowerCase().includes("electron");
 const Login = ({ setIsLogin, setIsAuth, setScreen }: CardProps) => {
-
+  const [login, setLogin] = useState<string>("")
+  const [password, setPassword] = useState<string>("")
   return (
     <Card className="w-2xl h-auto flex flex-col gap-4">
       <div className="flex flex-row justify-between">
@@ -63,9 +65,14 @@ const Login = ({ setIsLogin, setIsAuth, setScreen }: CardProps) => {
           )
         }
       </div>
-      <Input w="full" placeholder="Введите логин" />
-      <Input w="full" placeholder="Введите пароль" />
-      <Button text="Продолжить" w="full" onClick={() => setIsAuth(true)} />
+      <Input value={login} onChange={setLogin} w="full" placeholder="Введите логин" />
+      <Input type="password" value={password} onChange={setPassword} w="full" placeholder="Введите пароль" />
+      <Button text="Продолжить" w="full" onClick={async () => {
+        const result = await loginFunc(login, password)
+        if (result) {
+          setIsAuth(true)
+        }
+      }} />
       <p
         className="text-sm text-t-muted text-center cursor-pointer hover:text-t-muted/50"
         onClick={() => setIsLogin(false)}
@@ -76,6 +83,9 @@ const Login = ({ setIsLogin, setIsAuth, setScreen }: CardProps) => {
   );
 };
 const Registration = ({ setIsLogin, setIsAuth, setScreen }: CardProps) => {
+  const [login, setLogin] = useState<string>("")
+  const [password, setPassword] = useState<string>("")
+  const [repPasswrod, setRepPassword] = useState<string>("")
   return (
     <Card className="w-2xl h-auto flex flex-col gap-4">
       <div className="flex flex-row justify-between">
@@ -108,10 +118,16 @@ const Registration = ({ setIsLogin, setIsAuth, setScreen }: CardProps) => {
           )
         }
       </div>
-      <Input w="full" placeholder="Введите логин" />
-      <Input w="full" placeholder="Введите пароль" />
-      <Input w="full" placeholder="Введите пароль повторно" />
-      <Button text="Продолжить" w="full" onClick={() => setIsAuth(true)} />
+      <Input autoComplete="off" value={login} onChange={setLogin} w="full" placeholder="Введите логин" />
+      <Input autoComplete="off" type="password" value={password} onChange={setPassword} w="full" placeholder="Введите пароль" />
+      <Input autoComplete="off" type="password" value={repPasswrod} onChange={setRepPassword} w="full" placeholder="Введите пароль повторно" />
+      <Button text="Продолжить" w="full" onClick={async () => {
+        const result = await registerFunc(login, password, repPasswrod)
+        if (result) {
+          setIsAuth(true);
+        }
+      }}
+      />
       <p
         className="text-sm text-t-muted text-center cursor-pointer hover:text-t-muted/50"
         onClick={() => setIsLogin(true)}
@@ -120,4 +136,61 @@ const Registration = ({ setIsLogin, setIsAuth, setScreen }: CardProps) => {
       </p>
     </Card>
   );
+};
+
+const registerFunc = async (username: string, password: string, confirm_password: string) => {
+  try {
+    const response = await fetch("http://localhost:8000/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        "username": username,
+        "password": password,
+        "confirm_password": confirm_password
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Ошибка регистрации");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Ошибка при отправке запроса:", error);
+    throw error;
+  }
+}
+const loginFunc = async (username: string, password: string) => {
+  try {
+    const response = await fetch("http://localhost:8000/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username: username,
+        password: password
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Ошибка авторизации");
+    }
+
+    const data = await response.json();
+
+    if (data.access_token) {
+      localStorage.setItem("token", data.access_token);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Ошибка при отправке запроса:", error);
+    throw error;
+  }
 };
