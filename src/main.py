@@ -3,9 +3,15 @@ from fastapi.responses import HTMLResponse
 from src.routers import box_router, feedback_router
 from src.routers.auth_router import router as auth_router
 from src.db.database import init_db
-
+from fastapi.middleware.cors import CORSMiddleware  
 app = FastAPI()
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(box_router.router)
 app.include_router(feedback_router.router)
 app.include_router(auth_router)
