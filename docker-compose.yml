@@ -1,23 +1,22 @@
 services:
+
   db:
-    image: postgres:15
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5433:5432"
-    volumes:
-      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - app_network
+      image: postgres:15
+      restart: unless-stopped
+      environment:
+        POSTGRES_DB: ${DB_NAME}
+        POSTGRES_USER: ${DB_USER}
+        POSTGRES_PASSWORD: ${DB_PASSWORD}
+      ports:
+        - "5433:5432"
+      volumes:
+        - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+        - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
 
   api:
     build: .
@@ -34,8 +33,6 @@ services:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
-    networks:
-      - app_network
 
   bot:
     build:
@@ -43,17 +40,13 @@ services:
       dockerfile: Dockerfile
     restart: on-failure:5
     depends_on:
-      api:
-        condition: service_healthy
-      db:
-        condition: service_healthy
+      - api
+      - db
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME:-anonymous_verified_reviews_bot}
       - API_BASE_URL=${API_BASE_URL:-http://api:8000}
       - PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL:-http://localhost:8000}
-      - TMPDIR=/tmp
-      - XDG_CACHE_HOME=/tmp
     command: ["python", "-u", "-m", "bot.main"]
     networks:
       - app_network
@@ -61,7 +54,15 @@ services:
       - ALL
     read_only: true
     tmpfs:
-      - /tmp:rw,exec,mode=1777
+      - /tmp
+
+volumes:
+  db_data:
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge
 
   frontend:
     build:
@@ -76,14 +77,3 @@ services:
     environment:
       - NODE_ENV=development
       - VITE_API_BASE_URL=${API_BASE_URL}
-    networks:
-      - app_network
-
-volumes:
-  db_data:
-    driver: local
-
-networks:
-  app_network:
-    driver: overlay
-    attachable: true
