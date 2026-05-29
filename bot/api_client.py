@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import random
-
 import httpx
 from dataclasses import dataclass
 from typing import Any, Optional
@@ -35,10 +34,7 @@ class ApiClient:
 
     async def aclose(self) -> None:
         if self._client is not None:
-            try:
-                await self._client.aclose()
-            except Exception as exc:
-                logger.error("Error closing API client: %s", exc)
+            await self._client.aclose()
             self._client = None
 
     async def _request(self, method: str, path: str, *, params: dict[str, Any] | None = None, json: Any | None = None) -> Any:
@@ -114,4 +110,3 @@ class ApiClient:
             params={"token": token},
             json={"text": text},
         )
-

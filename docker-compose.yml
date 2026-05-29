@@ -38,10 +38,8 @@ services:
       - app_network
 
   bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: on-failure:5
+    build: .
+    restart: on-failure
     depends_on:
       api:
         condition: service_healthy
