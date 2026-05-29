@@ -32,6 +32,7 @@ RATE_LIMIT_MAX = 4
 RATE_LIMIT_WINDOW = 60
 
 rate_limiter = ActionRateLimiter(max_requests=RATE_LIMIT_MAX, window_seconds=RATE_LIMIT_WINDOW)
+api_client = ApiClient(API_BASE_URL)
 
 HELP_TEXT = (
     "📌 Информационная система сбора анонимных верифицированных отзывов\n"
@@ -99,7 +100,7 @@ def format_feedbacks(response: dict[str, Any]) -> str:
 
 
 async def get_api_client() -> ApiClient:
-    return ApiClient(API_BASE_URL)
+    return api_client
 
 
 def check_rate(message: Message, action: str) -> bool:
@@ -452,6 +453,10 @@ async def main() -> None:
             await bot.session.close()
         except Exception as exc:
             logger.error("Error closing bot session: %s", exc)
+        try:
+            await api_client.aclose()
+        except Exception as exc:
+            logger.error("Error closing API client: %s", exc)
 
 
 if __name__ == "__main__":

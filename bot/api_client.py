@@ -1,4 +1,7 @@
+import asyncio
 import logging
+import random
+
 import httpx
 from dataclasses import dataclass
 from typing import Any, Optional
@@ -13,9 +16,12 @@ class ApiError(Exception):
 
 
 class ApiClient:
-    def __init__(self, base_url: str):
+    def __init__(self, base_url: str, transport: Optional[httpx.AsyncBaseTransport] = None):
         self.base_url = base_url.rstrip("/")
         self._client: Optional[httpx.AsyncClient] = None
+        self._transport = transport
+        self._max_retries = 2
+        self._backoff_factor = 0.5
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None:
@@ -24,6 +30,7 @@ class ApiClient:
                 timeout=httpx.Timeout(10.0, connect=5.0, read=8.0, write=5.0),
                 limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
                 http2=False,
+                transport=self._transport,
             )
         return self._client
 
@@ -36,33 +43,62 @@ class ApiClient:
             self._client = None
 
     async def _request(self, method: str, path: str, *, params: dict[str, Any] | None = None, json: Any | None = None) -> Any:
-        try:
-            client = await self._get_client()
-            url = f"{self.base_url}{path}"
-            resp = await client.request(method, url, params=params, json=json)
-
-            if 200 <= resp.status_code < 300:
-                return resp.json() if resp.content else None
-
-            # FastAPI typically returns {"detail": "..."} for HTTPException.
-            detail = None
+        attempt = 0
+        while True:
             try:
-                payload = resp.json()
-                if isinstance(payload, dict):
-                    detail = payload.get("detail")
-            except Exception:
-                detail = None
+                client = await self._get_client()
+                url = f"{self.base_url}{path}"
+                resp = await client.request(method, url, params=params, json=json)
 
-            raise ApiError(status_code=resp.status_code, detail=detail or resp.text or "API error")
-        except httpx.TimeoutException as exc:
-            logger.error("API request timeout: %s", exc)
-            raise ApiError(status_code=504, detail="API request timeout")
-        except httpx.ConnectError as exc:
-            logger.error("API connection error: %s", exc)
-            raise ApiError(status_code=503, detail="API service unavailable")
-        except Exception as exc:
-            logger.error("Unexpected API error: %s", exc)
-            raise ApiError(status_code=500, detail="Unexpected error")
+                if 200 <= resp.status_code < 300:
+                    return resp.json() if resp.content else None
+
+                if resp.status_code in {503, 504} and attempt < self._max_retries:
+                    delay = self._backoff_factor * (2 ** attempt) + random.uniform(0, 0.1)
+                    logger.warning(
+                        "Temporary API error %s for %s %s, retrying after %.2fs",
+                        resp.status_code,
+                        method,
+                        path,
+                        delay,
+                    )
+                    attempt += 1
+                    await asyncio.sleep(delay)
+                    continue
+
+                # FastAPI typically returns {"detail": "..."} for HTTPException.
+                detail = None
+                try:
+                    payload = resp.json()
+                    if isinstance(payload, dict):
+                        detail = payload.get("detail")
+                except Exception:
+                    detail = None
+
+                raise ApiError(status_code=resp.status_code, detail=detail or resp.text or "API error")
+            except httpx.TimeoutException as exc:
+                if attempt < self._max_retries:
+                    delay = self._backoff_factor * (2 ** attempt) + random.uniform(0, 0.1)
+                    logger.warning("Timeout on API request %s %s, retrying after %.2fs", method, path, delay)
+                    attempt += 1
+                    await asyncio.sleep(delay)
+                    continue
+                logger.error("API request timeout: %s", exc)
+                raise ApiError(status_code=504, detail="API request timeout")
+            except httpx.RequestError as exc:
+                if attempt < self._max_retries:
+                    delay = self._backoff_factor * (2 ** attempt) + random.uniform(0, 0.1)
+                    logger.warning("Network error on API request %s %s, retrying after %.2fs: %s", method, path, delay, exc)
+                    attempt += 1
+                    await asyncio.sleep(delay)
+                    continue
+                logger.error("API connection error: %s", exc)
+                raise ApiError(status_code=503, detail="API service unavailable")
+            except ApiError:
+                raise
+            except Exception as exc:
+                logger.error("Unexpected API error: %s", exc)
+                raise ApiError(status_code=500, detail="Unexpected error")
 
     async def create_box(self) -> dict[str, Any]:
         return await self._request("POST", "/box")
