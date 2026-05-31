@@ -4,16 +4,19 @@ import Card from "../../small/card/card";
 import Input from "../../small/input/input";
 import { useAuthStore } from "../../../utils/useAuthStore";
 
+
 interface AuthCardProps {
-  isAuth?: boolean;
-  setIsAuth: (value: boolean) => void;
+  setAuthToken: (value: string | null) => void;
   screen?: string;
   setScreen: (value: "main" | "sender" | "recipient") => void;
+  isAuth?: boolean;    // Добавили знак ?, теперь они не ломают сборку
+  setIsAuth?: (value: boolean) => void; // Добавили знак ?
 }
+
 
 interface CardProps {
   setIsLogin: (value: boolean) => void;
-  setIsAuth: (value: boolean) => void;
+  setAuthToken: (value: string | null) => void; // Передаем её строго в подкомпоненты
   screen?: string;
   setScreen: (value: "main" | "sender" | "recipient") => void;
 }
@@ -29,7 +32,7 @@ const translateError = (msg: string): string => {
   if (lower.includes("value is not a valid")) return "Invalid value entered";
   if (lower.includes("ensure this value has at least")) {
     const match = lower.match(/\d+/);
-    return `Password is too short (minimum ${match ? match[0] : 6} characters)`;
+    return `Password is too short (minimum ${match ? match : 6} characters)`;
   }
   if (lower.includes("passwords do not match") || lower.includes("match")) return "Passwords do not match";
   return msg;
@@ -42,11 +45,7 @@ const registerFunc = async (username: string, password: string, confirm_password
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        username,
-        password,
-        confirm_password
-      }),
+      body: JSON.stringify({ username, password, confirm_password }),
     });
     if (!response.ok) {
       const errorData = await response.json();
@@ -61,9 +60,9 @@ const registerFunc = async (username: string, password: string, confirm_password
     }
     const data = await response.json();
     const token = data.access_token || data.token;
-    
     if (token) {
-      localStorage.setItem("token", token); // Жестко пишем в память по ключу "token"
+      localStorage.setItem("token", token);
+      useAuthStore.getState().setAuth(token, { username });
     }
     return data;
   } catch (error: any) {
@@ -79,17 +78,14 @@ const loginFunc = async (username: string, password: string) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        username,
-        password
-      }),
+      body: JSON.stringify({ username, password }),
     });
     if (!response.ok) {
       const errorData = await response.json();
       const detailMsg = String(errorData.detail || "").toLowerCase();
       if (
-        detailMsg.includes("invalid credentials") || 
-        detailMsg.includes("incorrect username") || 
+        detailMsg.includes("invalid credentials") ||
+        detailMsg.includes("incorrect username") ||
         detailMsg.includes("invalid username")
       ) {
         throw new Error("Incorrect username or password");
@@ -102,9 +98,9 @@ const loginFunc = async (username: string, password: string) => {
     }
     const data = await response.json();
     const token = data.access_token || data.token;
-    
     if (token) {
-      localStorage.setItem("token", token); // Жестко пишем в память по ключу "token"
+      localStorage.setItem("token", token);
+      useAuthStore.getState().setAuth(token, { username });
     }
     return data;
   } catch (error: any) {
@@ -113,9 +109,7 @@ const loginFunc = async (username: string, password: string) => {
   }
 };
 
-
-
-const Login = ({ setIsLogin, setIsAuth, setScreen }: CardProps) => {
+const Login = ({ setIsLogin, setAuthToken, setScreen }: CardProps) => {
   const [login, setLogin] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -123,8 +117,12 @@ const Login = ({ setIsLogin, setIsAuth, setScreen }: CardProps) => {
   const handleLogin = async () => {
     try {
       setError(null);
-      await loginFunc(login, password);
-      setIsAuth(true);
+      const result = await loginFunc(login, password);
+      if (result) {
+        // Вытаскиваем токен, который только что записал loginFunc, и передаем в App.tsx
+        const savedToken = localStorage.getItem("token");
+        setAuthToken(savedToken);
+      }
     } catch (errMessage: any) {
       setError(errMessage);
     }
@@ -164,7 +162,7 @@ const Login = ({ setIsLogin, setIsAuth, setScreen }: CardProps) => {
   );
 };
 
-const Registration = ({ setIsLogin, setIsAuth, setScreen }: CardProps) => {
+const Registration = ({ setIsLogin, setAuthToken, setScreen }: CardProps) => {
   const [login, setLogin] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [repPassword, setRepPassword] = useState<string>("");
@@ -174,7 +172,10 @@ const Registration = ({ setIsLogin, setIsAuth, setScreen }: CardProps) => {
     try {
       setError(null);
       const result = await registerFunc(login, password, repPassword);
-      if (result) setIsAuth(true)
+      if (result) {
+        const savedToken = localStorage.getItem("token");
+        setAuthToken(savedToken);
+      }
     } catch (errMessage: any) {
       setError(errMessage);
     }
@@ -215,14 +216,14 @@ const Registration = ({ setIsLogin, setIsAuth, setScreen }: CardProps) => {
   );
 };
 
-export default function AuthCard({ setIsAuth, setScreen }: AuthCardProps) {
+export default function AuthCard({ setAuthToken, setScreen }: AuthCardProps) {
   const [isLogin, setIsLogin] = useState<boolean>(true);
   return (
     <div className="h-screen p-6 flex text-white items-center justify-center">
       {isLogin ? (
-        <Login setScreen={setScreen} setIsLogin={setIsLogin} setIsAuth={setIsAuth} />
+        <Login setScreen={setScreen} setIsLogin={setIsLogin} setAuthToken={setAuthToken} />
       ) : (
-        <Registration setScreen={setScreen} setIsLogin={setIsLogin} setIsAuth={setIsAuth} />
+        <Registration setScreen={setScreen} setIsLogin={setIsLogin} setAuthToken={setAuthToken} />
       )}
     </div>
   );

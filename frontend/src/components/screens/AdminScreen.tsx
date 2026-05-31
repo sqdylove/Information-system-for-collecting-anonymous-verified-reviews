@@ -1,19 +1,31 @@
 import { useState } from "react";
 import AdminPanel from "../medium/admin/AdminStats";
 import AuthCard from "../medium/admin/AdminAuth";
-interface AdminScreenProps {
-  screen?: string;
-  setScreen: (value: "main" | "sender" | "recipient") => void
+
+interface User {
+  username: string;
+  token?: string;
 }
-export default function AdminScreen({ screen, setScreen }: AdminScreenProps) {
-  const [isAuth, setIsAuth] = useState(false);
+
+interface AdminScreenProps {
+  user: User | null;
+  screen?: string;
+  setScreen: (value: "main" | "sender" | "recipient") => void;
+  setAuthToken: (value: string | null) => void;
+}
+
+export default function AdminScreen({ user, screen, setScreen, setAuthToken }: AdminScreenProps) {
   return (
     <>
-      {isAuth ? (
-        <AdminPanel isAuth={isAuth} setIsAuth={setIsAuth} />
-      ) : (
-        <AuthCard screen={screen} setScreen={setScreen} isAuth={isAuth} setIsAuth={setIsAuth} />
-      )}
+      {user != null ? (
+        <AdminPanel setAuthToken={setAuthToken} setScreen={setScreen} />)
+        : (
+          <AuthCard
+            screen={screen}
+            setScreen={setScreen}
+            setAuthToken={setAuthToken}
+          />
+        )}
     </>
   );
 }

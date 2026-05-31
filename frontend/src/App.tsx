@@ -12,26 +12,29 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [screen, setScreen] = useState<"main" | "sender" | "recipient">("main");
-  
-  // Добавляем локальный стейт для токена, чтобы React мгновенно реагировал на логин
-  const [authToken, setAuthToken] = useState<string | null>(() => {
-    return localStorage.getItem("token"); // Ищем строго по ключу "token"
-  });
+  const [authToken, setAuthToken] = useState<string | null>(() => localStorage.getItem("token"));
 
   const [UUID, setUUID] = useState<string | null>(() => {
     const queryParams = new URLSearchParams(window.location.search);
     return queryParams.get("uuid") || null;
   });
 
+  // Жестко проверяем среду
   const isElectron =
     typeof window !== "undefined" &&
-    navigator.userAgent.toLowerCase().includes("electron");
+    typeof window.process !== "undefined" &&
+    (window.process as any).type === "renderer" ||
+    (typeof navigator !== "undefined" && navigator.userAgent.toLowerCase().includes("electron"));
 
   useEffect(() => {
     const autoLogin = async () => {
-      // Ищем токен строго по тому ключу, куда его сохраняют loginFunc и registerFunc
+      if (authToken === null) {
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
       const storedToken = localStorage.getItem("token");
-      console.log("Токен из localStorage при перезагрузке:", storedToken);
+
 
       if (!storedToken) {
         setIsLoading(false);
@@ -50,11 +53,10 @@ export default function App() {
         if (response.ok) {
           const userData = await response.json();
           setUser(userData);
-          setAuthToken(storedToken); // Синхронизируем стейт
         } else {
-          // Если токен протух на бэкенде — чистим память
           localStorage.removeItem("token");
           setAuthToken(null);
+          setUser(null);
         }
       } catch (error) {
         console.error("Ошибка автологина:", error);
@@ -64,39 +66,37 @@ export default function App() {
     };
 
     autoLogin();
-  }, []);
+  }, [authToken]);
 
   if (isLoading) {
-    return <div className="text-white">Загрузка сессии...</div>;
+    return <div className="text-white p-6">Загрузка сессии...</div>;
+  }
+  if (isElectron) {
+    if (!authToken) {
+      return <AuthCard setAuthToken={setAuthToken} setScreen={setScreen} />;
+    }
+    return <AdminScreen setScreen={setScreen} user={user} setAuthToken={setAuthToken} />;
+  }
+  if (authToken && screen === "recipient") {
+    return (
+      <AdminScreen
+        screen={screen}
+        setScreen={setScreen}
+        user={user} // Добавлено
+        setAuthToken={setAuthToken} // Добавлено
+      />
+    );
   }
 
-  // ЕСЛИ ПРИЛОЖЕНИЕ ЗАПУЩЕНО В ELECTRON (Десктопная админка)
-  if (isElectron) {
-    // Проверяем наличие токена. Если его нет — показываем окно входа
-    if (!authToken) {
-      return (
-        <AuthCard 
-          setIsAuth={(val) => {
-            if (val) {
-              // Когда loginFunc запишет токен в localStorage, обновляем стейт в App
-              setAuthToken(localStorage.getItem("token"));
-            }
-          }} 
-          setScreen={setScreen} 
-        />
-      );
-    }
-    // Если токен есть — пускаем в панель управления
-    return <AdminScreen setScreen={setScreen} />;
-  } 
-  
-  // ЕСЛИ ЭТО ОБЫЧНЫЙ САЙТ
+  // По умолчанию для сайта рендерим ввод UUID и отправку отзывов
   return (
-    <MainScreen 
-      UUID={UUID} 
-      screen={screen} 
-      setScreen={setScreen} 
-      setUUID={setUUID} 
+    <MainScreen
+      UUID={UUID}
+      screen={screen}
+      setScreen={setScreen}
+      setUUID={setUUID}
+      user={user} // Добавлено
+      setAuthToken={setAuthToken} // Добавлено
     />
   );
 }

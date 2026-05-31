@@ -4,14 +4,28 @@ import Card from "../small/card/card";
 import UserScreen from "./UserScreen";
 import AdminScreen from "./AdminScreen";
 
-interface MainScreenProps {
-  UUID: string | null;
-  screen: "main" | "sender" | "recipient"
-  setScreen: (value: "main" | "sender" | "recipient") => void
-  setUUID: (value: string | null) => void
+interface User {
+  username: string;
+  token?: string;
 }
 
-export default function MainScreen({ UUID, screen, setScreen, setUUID }: MainScreenProps) {
+interface MainScreenProps {
+  UUID: string | null;
+  screen: "main" | "sender" | "recipient";
+  setScreen: (value: "main" | "sender" | "recipient") => void;
+  setUUID: (value: string | null) => void;
+  user: User | null; // Добавили обязательный проп
+  setAuthToken: (value: string | null) => void; // Добавили обязательный проп
+}
+
+export default function MainScreen({ 
+  UUID, 
+  screen, 
+  setScreen, 
+  setUUID, 
+  user, 
+  setAuthToken 
+}: MainScreenProps) {
   if (UUID != null) {
     return <UserScreen UUIDCODE={UUID} screen={screen} setScreen={setScreen} UUID={UUID} setUUID={setUUID} />
   }
@@ -19,7 +33,8 @@ export default function MainScreen({ UUID, screen, setScreen, setUUID }: MainScr
     return <UserScreen screen={screen} setScreen={setScreen} UUIDCODE={UUID} UUID={UUID} setUUID={setUUID} />
   }
   if (screen === "recipient") {
-    return <AdminScreen screen={screen} setScreen={setScreen} />
+    // Прокидываем переданные сверху пропсы внутрь AdminScreen
+    return <AdminScreen screen={screen} setScreen={setScreen} user={user} setAuthToken={setAuthToken} />
   }
   return (
     <div className="min-h-screen w-screen flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto overflow-x-hidden select-none text-white relative">
@@ -45,7 +60,6 @@ export default function MainScreen({ UUID, screen, setScreen, setUUID }: MainScr
             <Button text={"Войти как получатель"} onClick={() => setScreen("recipient")}></Button>
           </div>
         </Card>
-
       </div>
     </div>
   )
@@ -59,7 +73,7 @@ interface ListElemProps {
 
 const ListElem = ({ num, title, text }: ListElemProps) => {
   return (
-    <div className="mb-3 flex items-start"> {/* items-start выровняет иконку по верхней линии текста */}
+    <div className="mb-3 flex items-start">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-transparent border-ui-border border-2 font-bold text-white">
         {num}
       </div>

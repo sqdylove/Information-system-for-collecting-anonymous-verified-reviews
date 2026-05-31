@@ -5,18 +5,27 @@ import Review from "./review/review";
 import UUIDLink from "./uuidLink/uuidLink";
 import ActivityChart from "./activityChart/activityChart";
 
-interface Props {
-  isAuth?: boolean;
-  setIsAuth: (value: boolean) => void;
+interface AdminPanelProps {
+  setAuthToken: (value: string | null) => void;
+  setScreen: (value: "main" | "sender" | "recipient") => void; // Добавили проп изменения экрана
 }
 
-export default function AdminPanel({ setIsAuth }: Props) {
+export default function AdminPanel({ setAuthToken, setScreen }: AdminPanelProps) {
   const [ActiveTab, setActiveTab] = useState<
     "statistics" | "links" | "reviews"
   >("statistics");
+
   const [totalReviews, setTotalReviews] = useState<number>(1248);
   const [moderatedReviews, setModeratedReviews] = useState<number>(1062);
   const [blockedReviews, setBlockedReviews] = useState<number>(174);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.clear();
+    setScreen("main");
+    setAuthToken(null);
+  };
+
   return (
     <div className="h-screen p-6 text-white grid grid-cols-[350px_1fr] gap-4 overflow-hidden">
       <Card className="h-full">
@@ -39,10 +48,11 @@ export default function AdminPanel({ setIsAuth }: Props) {
             />
           </div>
           <div>
-            <Button text="Выход" w="full" onClick={() => setIsAuth(false)} />
+            <Button text="Выход" w="full" onClick={handleLogout} />
           </div>
         </div>
       </Card>
+
       {ActiveTab === "statistics" ? (
         <Statistics
           totalReviews={totalReviews}
