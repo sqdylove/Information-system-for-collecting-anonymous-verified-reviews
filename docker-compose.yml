@@ -1,22 +1,21 @@
 services:
-
   db:
-      image: postgres:15
-      restart: unless-stopped
-      environment:
-        POSTGRES_DB: ${DB_NAME}
-        POSTGRES_USER: ${DB_USER}
-        POSTGRES_PASSWORD: ${DB_PASSWORD}
-      ports:
-        - "5433:5432"
-      volumes:
-        - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-        - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
-      healthcheck:
-        test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-        interval: 5s
-        timeout: 5s
-        retries: 5
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   api:
     build: .
@@ -33,21 +32,34 @@ services:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   bot:
     build: .
     restart: on-failure
     depends_on:
+      api:
+        condition: service_healthy
       db:
         condition: service_healthy
-      api:
-        condition: service_started
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME:-anonymous_verified_reviews_bot}
       - API_BASE_URL=${API_BASE_URL:-http://api:8000}
       - PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL:-http://localhost:8000}
+      - TMPDIR=/tmp
+      - XDG_CACHE_HOME=/tmp
     command: ["python", "-u", "-m", "bot.main"]
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,exec,mode=1777
 
   frontend:
     build:
@@ -62,3 +74,7 @@ services:
     environment:
       - NODE_ENV=development
       - VITE_API_BASE_URL=${API_BASE_URL}
+
+volumes:
+  db_data:
+    driver: local
