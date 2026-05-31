@@ -19,7 +19,6 @@ export default function App() {
     return queryParams.get("uuid") || null;
   });
 
-  // Жестко проверяем среду
   const isElectron =
     typeof window !== "undefined" &&
     typeof window.process !== "undefined" &&
@@ -82,21 +81,19 @@ export default function App() {
       <AdminScreen
         screen={screen}
         setScreen={setScreen}
-        user={user} // Добавлено
-        setAuthToken={setAuthToken} // Добавлено
+        user={user}
+        setAuthToken={setAuthToken}
       />
     );
   }
-
-  // По умолчанию для сайта рендерим ввод UUID и отправку отзывов
   return (
     <MainScreen
       UUID={UUID}
       screen={screen}
       setScreen={setScreen}
       setUUID={setUUID}
-      user={user} // Добавлено
-      setAuthToken={setAuthToken} // Добавлено
+      user={user}
+      setAuthToken={setAuthToken}
     />
   );
 }
