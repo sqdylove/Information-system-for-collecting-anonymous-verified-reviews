@@ -2,7 +2,6 @@ import { useState, ChangeEvent } from "react";
 import Button from "../../../small/button/button";
 import Card from "../../../small/card/card";
 import Input from "../../../small/input/input";
-
 interface Props {
   className?: string;
   UUIDCODE: string | null;
@@ -19,8 +18,9 @@ const clearUuidParam = () => {
 export default function UserReview({ className, onBack, UUIDCODE, setUUID }: Props) {
   const [text, setText] = useState<string>("");
   const [textTheme, setTextTheme] = useState<string>("")
-  const maxChars = 500;
-
+  const maxChars = 460;
+  const [error, setError] = useState<string>("")
+  const [success, setSuccess] = useState<string>("")
   const handleTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     if (e.target.value.length <= maxChars) {
       setText(e.target.value);
@@ -80,7 +80,7 @@ export default function UserReview({ className, onBack, UUIDCODE, setUUID }: Pro
           {text.length.toLocaleString("en-US")} / {maxChars}
         </span>
       </div>
-      <div className="flex flex-row justify-between items-center mt-5 gap-3">
+      <div className="mb-3 flex flex-row justify-between items-center mt-5 gap-3">
         <Button
           text="Очистить"
           w="fit"
@@ -92,17 +92,26 @@ export default function UserReview({ className, onBack, UUIDCODE, setUUID }: Pro
           w="fit"
           className="text-xs md:text-sm px-4 bg-brand-primary"
           onClick={async () => {
-            console.log({ textTheme, text, UUIDCODE })
             const feefdbackText = `${textTheme}\n${text}`
             const res = await sendFeedback(UUIDCODE, feefdbackText)
             console.log(res)
-            if (res.id != null || undefined) {
-              alert("Отправлено!")
-              setUUID(null)
+            if (res.id != null || undefined) { 
+              setSuccess(`Ваш отзыв по теме '${textTheme}' отправлен успешно!`)
+              setTimeout(() => {
+                setSuccess("")
+                setUUID(null)
+              }, 5000)
+            } else {
+              setError(res)
+              setTimeout(() => {
+                setError("")
+              }, 5000)
             }
           }}
         />
       </div>
+      {error ? (<p className="text-t-red text-center">{error}</p>) : ""}
+      {success ? (<p className="text-t-green text-center">{success}</p>) : ""}
     </Card>
   );
 }
@@ -118,16 +127,17 @@ const sendFeedback = async (uuid: string | null, text: string) => {
         text: text
       }),
     });
-
+    if (response.status === 404) {
+      return ("Неверный UUID код! Получатель не найден. Попробуйте другой UUID!");
+    }
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.detail || "Ошибка при отправке отзыва");
+      return (errorData.detail || "Ошибка при отправке отзыва");
     }
-
     const data = await response.json();
     return data;
   } catch (error) {
     console.error("Ошибка при отправке запроса:", error);
-    throw error;
+    return error
   }
 };
