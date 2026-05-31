@@ -13,9 +13,8 @@
     "preview": "vite preview",
     "watch:css": "tailwindcss -i ./src/styles/styles.css -o ./src/styles/style.css --watch",
     "tailwind:watch": "tailwindcss -i ./src/styles/styles.css -o ./src/styles/style.css --watch",
-    "electron:start": "VITE_USE_ELECTRON=true vite",
-    "electron:run": "electron .",
-    "start": "concurrently \"npm run tailwind:watch\" \"npm run electron:start\" \"wait-on http://localhost:5173 && npm run electron:run\"",
+    "electron:start": "vite --host",
+    "start": "concurrently \"npm run tailwind:watch\" \"npm run electron:start\"",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,md,json}\""
   },
   "dependencies": {
@@ -45,8 +44,7 @@
     "typescript": "^5.2.2",
     "vite": "^5.1.6",
     "vite-plugin-electron": "^0.28.6",
-    "vite-plugin-electron-renderer": "^0.14.5",
-    "wait-on": "^9.0.10"
+    "vite-plugin-electron-renderer": "^0.14.5"
   },
   "main": "dist-electron/main.js"
 }

@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Button from "../../small/button/button";
 import Card from "../../small/card/card";
 import Review from "./review/review";
 import UUIDLink from "./uuidLink/uuidLink";
 import ActivityChart from "./activityChart/activityChart";
+import BoxList from "./uuidLink/linkList";
+import LatestReviewsCard from "./review/Reviews";
 
 interface AdminPanelProps {
   setAuthToken: (value: string | null) => void;
@@ -187,16 +189,7 @@ const Statistics = ({
             </p>
           </div>
 
-          <div className="overflow-y-auto flex-1 pr-1 custom-scroll">
-            {Array.from({ length: 10 }).map((_, index) => (
-              <Review
-                key={index}
-                title={"Lorem ipsum..."}
-                UUID={"cds321-zxc342-nhg64y6-xcvb6-mnf49m"}
-                timeAgo={"2 minuts ago"}
-              />
-            ))}
-          </div>
+          <LatestReviewsCard />
         </Card>
 
         <Card className="h-full min-h-0 flex flex-col p-4! overflow-hidden">
@@ -206,23 +199,7 @@ const Statistics = ({
               Смотреть все
             </p>
           </div>
-
-          <div className="overflow-y-auto flex-1 pr-1 custom-scroll">
-            {Array.from({ length: 10 }).map((_, index) => {
-              const randomStatus =
-                Math.random() < 0.5 ? "Активна" : "Неактивна";
-              const randomClicks = Math.floor(Math.random() * 150).toString();
-              return (
-                <UUIDLink
-                  key={index}
-                  clicks={randomClicks}
-                  UUID={`cds321-zxc342-nhg64y6-xcvb6-mnf49m`}
-                  date={"24.05.2026"}
-                  isActive={randomStatus}
-                />
-              );
-            })}
-          </div>
+          <BoxList />
         </Card>
       </div>
       <div className="grid grid-cols-[1.5fr_1fr] gap-4 min-h-0 overflow-hidden h-full">
@@ -260,53 +237,206 @@ const Statistics = ({
     </div>
   );
 };
+interface BoxData {
+  id?: string | number;
+  uuid?: string;
+  clicks?: string | number;
+  date?: string;
+  isActive?: string;
+}
 
-const Links = () => {
+interface FeedbackData {
+  id?: string | number;
+  text?: string;
+  box_uuid?: string;
+  created_at?: string;
+}
+
+export const Links = () => {
+  const [boxes, setBoxes] = useState<BoxData[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState<boolean>(false);
+
+  const fetchBoxes = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Токен авторизации не найден");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch("http://localhost:8000/auth/my-boxes", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Не удалось загрузить UUID-ссылки");
+      }
+
+      const data = await response.json();
+      setBoxes(data.boxes || []);
+    } catch (err: any) {
+      console.error("Ошибка при получении боксов:", err);
+      setError(err.message || "Ошибка соединения с сервером");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleCreateLink = async () => {
+    const token = localStorage.getItem("token");
+    if (!token || isCreating) return;
+
+    try {
+      setIsCreating(true);
+      // Предполагается стандартный эндпоинт POST /box для генерации новой ссылки
+      const response = await fetch("http://localhost:8000/box", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Не удалось создать ссылку");
+      }
+
+      // После успешного создания принудительно обновляем весь список
+      await fetchBoxes();
+    } catch (err: any) {
+      console.error("Ошибка создания ссылки:", err);
+      alert(err.message || "Не удалось создать ссылку");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBoxes();
+  }, [fetchBoxes]);
+
   return (
-    <>
-      <div className="h-full">
-        <div className="w-full flex flex-row justify-end gap-6 mb-3">
-          <Button className="pl-16 pr-16" text={"Обновить"}></Button>
-          <Button className="pl-16 pr-16" text={"Создать ссылку"}></Button>
-        </div>
-        <div className="h-[calc(100vh-8rem)] flex flex-col gap-4 min-h-0 overflow-y-auto flex-1 pr-1 custom-scroll">
-          {Array.from({ length: 15 }).map((_, index) => {
-            const randomStatus = Math.random() < 0.5 ? "Активна" : "Неактивна";
-            const randomClicks = Math.floor(Math.random() * 150).toString();
-            return (
-              <UUIDLink
-                key={index}
-                clicks={randomClicks}
-                UUID={`cds321-zxc342-nhg64y6-xcvb6-mnf49m`}
-                date={"24.05.2026"}
-                isActive={randomStatus}
-                UUIDScreen
-              />
-            );
-          })}
-        </div>
+    <div className="h-full">
+      <div className="w-full flex flex-row justify-end gap-6 mb-3">
+        <Button
+          className="pl-16 pr-16"
+          text={isLoading ? "Загрузка..." : "Обновить"}
+          onClick={fetchBoxes}
+        />
+        <Button
+          className="pl-16 pr-16"
+          text={isCreating ? "Создание..." : "Создать ссылку"}
+          onClick={handleCreateLink}
+        />
       </div>
-    </>
+
+      <div className="h-[calc(100vh-8rem)] flex flex-col gap-4 min-h-0 overflow-y-auto flex-1 pr-1 custom-scroll">
+        {isLoading && boxes.length === 0 ? (
+          <div className="text-t-muted text-sm p-4">Загрузка списка ссылок...</div>
+        ) : error ? (
+          <div className="text-t-red text-sm p-4">{error}</div>
+        ) : boxes.length === 0 ? (
+          <div className="text-t-muted text-sm p-4">У вас еще нет созданных UUID-ссылок</div>
+        ) : (
+          boxes.map((box, index) => (
+            <UUIDLink
+              key={box.id || index}
+              clicks={box.clicks !== undefined ? box.clicks.toString() : "0"}
+              UUID={box.uuid || "Неизвестный UUID"}
+              date={box.date || "24.05.2026"}
+              isActive={box.isActive || "Активна"}
+              UUIDScreen
+            />
+          ))
+        )}
+      </div>
+    </div>
   );
 };
-const Reviews = () => {
+
+export const Reviews = () => {
+  const [feedbacks, setFeedbacks] = useState<FeedbackData[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchFeedbacks = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Токен авторизации не найден");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch("http://localhost:8000/auth/my-feedbacks", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Не удалось загрузить отзывы");
+      }
+
+      const data = await response.json();
+      setFeedbacks(data.feedbacks || []);
+    } catch (err: any) {
+      console.error("Ошибка при получении отзывов:", err);
+      setError(err.message || "Ошибка соединения с сервером");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchFeedbacks();
+  }, [fetchFeedbacks]);
+
   return (
-    <>
-      <div className="h-full">
-        <div className="w-full flex flex-row justify-end gap-6 mb-3">
-          <Button className="pl-16 pr-16" text={"Обновить"}></Button>
-        </div>
-        <div className="h-[calc(100vh-8rem)] flex flex-col gap-4 min-h-0 overflow-y-auto flex-1 pr-1 custom-scroll">
-          {Array.from({ length: 10 }).map((_, index) => (
-            <Review
-              key={index}
-              title={"Lorem ipsum..."}
-              UUID={"cds321-zxc342-nhg64y6-xcvb6-mnf49m"}
-              timeAgo={"2 minuts ago"}
-            />
-          ))}
-        </div>
+    <div className="h-full">
+      <div className="w-full flex flex-row justify-end gap-6 mb-3">
+        <Button
+          className="pl-16 pr-16"
+          text={isLoading ? "Загрузка..." : "Обновить"}
+          onClick={fetchFeedbacks}
+        />
       </div>
-    </>
+
+      <div className="h-[calc(100vh-8rem)] flex flex-col gap-4 min-h-0 overflow-y-auto flex-1 pr-1 custom-scroll">
+        {isLoading && feedbacks.length === 0 ? (
+          <div className="text-t-muted text-sm p-4">Загрузка отзывов...</div>
+        ) : error ? (
+          <div className="text-t-red text-sm p-4">{error}</div>
+        ) : feedbacks.length === 0 ? (
+          <div className="text-t-muted text-sm p-4">У вас еще нет полученных отзывов</div>
+        ) : (
+          feedbacks.map((item, index) => (
+            <Review
+              key={item.id || index}
+              title={item.text || "Без текста"}
+              UUID={item.box_uuid || "Неизвестный UUID"}
+              timeAgo={item.created_at || "Недавно"}
+            />
+          ))
+        )}
+      </div>
+    </div>
   );
 };
