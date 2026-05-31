@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from fastapi.openapi.utils import get_openapi
 from src.routers import box_router, feedback_router
 from src.routers.auth_router import router as auth_router
 from src.db.database import init_db
@@ -11,8 +12,29 @@ app.include_router(feedback_router.router)
 app.include_router(auth_router)
 
 # Create tables at import time so TestClient/pytest works reliably.
-# (init_db uses SQLAlchemy models metadata, populated when routers/models are imported above)
 init_db()
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        routes=app.routes,
+    )
+    openapi_schema.setdefault("components", {}).setdefault("securitySchemes", {})["BearerAuth"] = {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "token",
+    }
+    for path in openapi_schema.get("paths", {}).values():
+        for operation in path.values():
+            if isinstance(operation, dict):
+                operation.setdefault("security", []).append({"BearerAuth": []})
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 @app.get("/", response_class=HTMLResponse)
 def root():
