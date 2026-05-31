@@ -88,3 +88,45 @@ def test_auth_register_and_login():
     )
     assert me_resp.status_code == 200
     assert me_resp.json()["username"] == "testuser"
+
+    my_boxes_resp = client.get(
+        "/auth/my-boxes",
+        headers={"Authorization": f"Bearer {register_data['token']}"},
+    )
+    assert my_boxes_resp.status_code == 200
+    assert my_boxes_resp.json()["boxes"] == []
+
+    created_box = client.post("/box", headers={"Authorization": f"Bearer {register_data['token']}"})
+    assert created_box.status_code == 200
+
+    my_boxes_after = client.get(
+        "/auth/my-boxes",
+        headers={"Authorization": f"Bearer {register_data['token']}"},
+    )
+    assert my_boxes_after.status_code == 200
+    assert len(my_boxes_after.json()["boxes"]) == 1
+
+    my_feedbacks = client.get(
+        "/auth/my-feedbacks",
+        headers={"Authorization": f"Bearer {register_data['token']}"},
+    )
+    assert my_feedbacks.status_code == 200
+    assert my_feedbacks.json()["feedbacks"] == []
+
+    feedback_resp = client.post(
+        f"/box/{created_box.json()['uuid']}/feedback",
+        json={"text": "user feedback"},
+    )
+    assert feedback_resp.status_code == 200
+
+    my_feedbacks_after = client.get(
+        "/auth/my-feedbacks",
+        headers={"Authorization": f"Bearer {register_data['token']}"},
+    )
+    assert my_feedbacks_after.status_code == 200
+    assert len(my_feedbacks_after.json()["feedbacks"]) == 1
+    assert my_feedbacks_after.json()["feedbacks"][0]["box_uuid"] == created_box.json()["uuid"]
+
+
+
+

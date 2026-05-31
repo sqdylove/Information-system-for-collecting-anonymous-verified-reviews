@@ -16,8 +16,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    networks:
-      - app_network
 
   api:
     build: .
@@ -34,8 +32,12 @@ services:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
-    networks:
-      - app_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   bot:
     build: .
@@ -53,8 +55,6 @@ services:
       - TMPDIR=/tmp
       - XDG_CACHE_HOME=/tmp
     command: ["python", "-u", "-m", "bot.main"]
-    networks:
-      - app_network
     cap_drop:
       - ALL
     read_only: true
@@ -74,14 +74,7 @@ services:
     environment:
       - NODE_ENV=development
       - VITE_API_BASE_URL=${API_BASE_URL}
-    networks:
-      - app_network
 
 volumes:
   db_data:
     driver: local
-
-networks:
-  app_network:
-    driver: overlay
-    attachable: true
