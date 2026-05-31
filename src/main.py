@@ -13,6 +13,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_headers=["Authorization", "Content-Type", "Accept"], 
 )
 app.include_router(box_router.router)
 app.include_router(feedback_router.router)
