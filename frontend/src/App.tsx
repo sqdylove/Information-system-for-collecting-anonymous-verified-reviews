@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import AdminScreen from "./components/screens/AdminScreen";
 import MainScreen from "./components/screens/mainScreen";
 import AuthCard from "./components/medium/admin/AdminAuth";
+import { API_BASE_URL } from "./utils/api";
 
 interface User {
   username: string;
@@ -41,7 +42,7 @@ export default function App() {
       }
 
       try {
-        const response = await fetch("http://localhost:8000/auth/me", {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${storedToken}`,

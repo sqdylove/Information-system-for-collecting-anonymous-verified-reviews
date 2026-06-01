@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "../small/button/button";
 import Card from "../small/card/card";
 import UserScreen from "./UserScreen";
@@ -14,18 +14,28 @@ interface MainScreenProps {
   screen: "main" | "sender" | "recipient";
   setScreen: (value: "main" | "sender" | "recipient") => void;
   setUUID: (value: string | null) => void;
-  user: User | null; // Добавили обязательный проп
-  setAuthToken: (value: string | null) => void; // Добавили обязательный проп
+  user: User | null; 
+  setAuthToken: (value: string | null) => void;
 }
 
-export default function MainScreen({ 
-  UUID, 
-  screen, 
-  setScreen, 
-  setUUID, 
-  user, 
-  setAuthToken 
+export default function MainScreen({
+  UUID,
+  screen,
+  setScreen,
+  setUUID,
+  user,
+  setAuthToken
 }: MainScreenProps) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 920); // 768px — брейкпоинт md в Tailwind
+    };
+
+    handleResize(); // Проверяем при инициализации
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   if (UUID != null) {
     return <UserScreen UUIDCODE={UUID} screen={screen} setScreen={setScreen} UUID={UUID} setUUID={setUUID} />
   }
@@ -49,7 +59,7 @@ export default function MainScreen({
           <ListElem
             num="2"
             title="Получатель"
-            text="Может создать UUID-код или ссылку и получать анонимные отзывы от отправителя"
+            text="Может создать UUID-код или ссылку и получать анонимные отзывы от отправителя. Для ПК-версии сайта"
           />
         </Card>
         <Card className="w-full max-w-2xl">
@@ -57,7 +67,7 @@ export default function MainScreen({
           <p className="text-t-muted text-xs mb-4">Выберите отправителя или получателя</p>
           <div className="flex flex-row justify-between items-center gap-4 w-full">
             <Button text={"Войти как отправитель"} onClick={() => setScreen("sender")}></Button>
-            <Button text={"Войти как получатель"} onClick={() => setScreen("recipient")}></Button>
+            <Button disabled={isMobile} className="pointer-events-none opacity-40 cursor-not-allowed md:pointer-events-auto md:opacity-100 md:cursor-pointer" text={"Войти как получатель"} onClick={() => setScreen("recipient")}></Button>
           </div>
         </Card>
       </div>

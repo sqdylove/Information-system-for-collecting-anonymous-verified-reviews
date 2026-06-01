@@ -3,6 +3,7 @@ import Button from "../../small/button/button";
 import Card from "../../small/card/card";
 import Input from "../../small/input/input";
 import { useAuthStore } from "../../../utils/useAuthStore";
+import { API_BASE_URL } from "../../../utils/api";
 
 
 interface AuthCardProps {
@@ -40,7 +41,7 @@ const translateError = (msg: string): string => {
 
 const registerFunc = async (username: string, password: string, confirm_password: string) => {
   try {
-    const response = await fetch("http://localhost:8000/auth/register", {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -73,7 +74,7 @@ const registerFunc = async (username: string, password: string, confirm_password
 
 const loginFunc = async (username: string, password: string) => {
   try {
-    const response = await fetch("http://localhost:8000/auth/login", {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

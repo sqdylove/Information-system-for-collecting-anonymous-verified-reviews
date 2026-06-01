@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import UUIDLink from "./uuidLink";
+import { API_BASE_URL } from "../../../../utils/api";
 
 interface BoxData {
   id?: string | number;
-  uuid?: string; // Поле UUID из вашей схемы бэкенда
+  uuid?: string;
   clicks?: string | number;
   date?: string;
   isActive?: "Активна" | "Неактивна" | string;
@@ -25,7 +26,7 @@ export default function BoxList() {
       }
 
       try {
-        const response = await fetch("http://localhost:8000/auth/my-boxes", {
+        const response = await fetch(`${API_BASE_URL}/auth/my-boxes`, {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`,
@@ -39,7 +40,6 @@ export default function BoxList() {
         }
 
         const data = await response.json();
-        // Записываем массив из поля "boxes", как показано в схеме Successful Response в Swagger
         setBoxes(data.boxes || []); 
       } catch (err: any) {
         console.error("Ошибка при получении боксов:", err);

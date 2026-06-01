@@ -2,6 +2,7 @@ import { useState, ChangeEvent } from "react";
 import Button from "../../../small/button/button";
 import Card from "../../../small/card/card";
 import Input from "../../../small/input/input";
+import { API_BASE_URL } from "../../../../utils/api";
 interface Props {
   className?: string;
   UUIDCODE: string | null;
@@ -118,7 +119,7 @@ export default function UserReview({ className, onBack, UUIDCODE, setUUID }: Pro
 const sendFeedback = async (uuid: string | null, text: string) => {
   try {
     if (uuid == null) throw new Error("UUID код не заполнен!")
-    const response = await fetch(`http://localhost:8000/box/${uuid}/feedback`, {
+    const response = await fetch(`${API_BASE_URL}/box/${uuid}/feedback`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

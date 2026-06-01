@@ -6,10 +6,11 @@ import UUIDLink from "./uuidLink/uuidLink";
 import ActivityChart from "./activityChart/activityChart";
 import BoxList from "./uuidLink/linkList";
 import LatestReviewsCard from "./review/Reviews";
+import { API_BASE_URL } from "../../../utils/api";
 
 interface AdminPanelProps {
   setAuthToken: (value: string | null) => void;
-  setScreen: (value: "main" | "sender" | "recipient") => void; // Добавили проп изменения экрана
+  setScreen: (value: "main" | "sender" | "recipient") => void;
 }
 
 export default function AdminPanel({ setAuthToken, setScreen }: AdminPanelProps) {
@@ -17,9 +18,9 @@ export default function AdminPanel({ setAuthToken, setScreen }: AdminPanelProps)
     "statistics" | "links" | "reviews"
   >("statistics");
 
-  const [totalReviews, setTotalReviews] = useState<number>(1248);
-  const [moderatedReviews, setModeratedReviews] = useState<number>(1062);
-  const [blockedReviews, setBlockedReviews] = useState<number>(174);
+  const [totalReviews, setTotalReviews] = useState<number>(0);
+  const [moderatedReviews, setModeratedReviews] = useState<number>(0);
+  const [blockedReviews, setBlockedReviews] = useState<number>(0);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -75,14 +76,23 @@ export default function AdminPanel({ setAuthToken, setScreen }: AdminPanelProps)
 
 interface StatProps {
   totalReviews: number;
-  setTotalReviews?: (value: number) => void;
+  setTotalReviews: (value: number) => void;
   moderatedReviews: number;
-  setModeratedReviews?: (value: number) => void;
+  setModeratedReviews: (value: number) => void;
   blockedReviews: number;
-  setBlockedReviews?: (value: number) => void;
+  setBlockedReviews: (value: number) => void;
 }
 
-const Statistics = ({
+interface StatProps {
+  totalReviews: number;
+  setTotalReviews: (value: number) => void;
+  moderatedReviews: number;
+  setModeratedReviews: (value: number) => void;
+  blockedReviews: number;
+  setBlockedReviews: (value: number) => void;
+}
+
+export const Statistics = ({
   totalReviews,
   setTotalReviews,
   moderatedReviews,
@@ -90,89 +100,104 @@ const Statistics = ({
   blockedReviews,
   setBlockedReviews,
 }: StatProps) => {
-  const [totalReviewsPercent, setTotalReviewsPrecent] = useState<number>(
-    (totalReviews * 0.4) / 34
-  );
-  const [moderatedReviewsPercent, setModeratedReviewsPercent] =
-    useState<number>((moderatedReviews * 0.4) / 34);
-  const [blockedReviewsPercent, setBlockedReviewsPercent] = useState<number>(
-    (blockedReviews * 0.5) / 34
-  );
-  const [uuidLinks, setUuidLinks] = useState<number>(10);
-  const [uuidLinksPercent, setUuidLinksPercent] = useState<number>(5);
+  const [uuidLinks, setUuidLinks] = useState<number>(0);
+  const [clicksCount, setClicksCount] = useState<number>(0);
+  const [lastReviewDate, setLastReviewDate] = useState<string>("Нет отзывов");
 
-  const [clicksCount, setClicksCount] = useState<number>(23);
-  const [clicksPercent, setClicksPercent] = useState<number>(12);
+  const [totalReviewsPercent] = useState<number>(100);
+  const [moderatedReviewsPercent] = useState<number>(100);
+  const [blockedReviewsPercent] = useState<number>(0);
+  const [uuidLinksPercent] = useState<number>(100);
+  const [clicksPercent] = useState<number>(0);
 
-  const [lastReviewDate, setLastReviewDate] = useState<string>("24.05.2026");
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    const fetchAllData = async () => {
+      try {
+        const headers = {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        };
+
+        const [feedbacksRes, boxesRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/auth/my-feedbacks`, { method: "GET", headers }),
+          fetch(`${API_BASE_URL}/auth/my-boxes`, { method: "GET", headers })
+        ]);
+
+        if (feedbacksRes.ok) {
+          const feedbacksData = await feedbacksRes.json();
+          const list = feedbacksData.feedbacks || [];
+
+          setTotalReviews(list.length);
+          const approved = list.filter((f: any) => f.is_moderated !== false).length;
+          setModeratedReviews(approved);
+          setBlockedReviews(list.length - approved);
+          if (list.length > 0 && list[0].created_at) {
+            const rawDate = new Date(list[0].created_at);
+            setLastReviewDate(rawDate.toLocaleDateString("ru-RU"));
+          }
+        }
+        if (boxesRes.ok) {
+          const boxesData = await boxesRes.json();
+          const list = boxesData.boxes || [];
+          setUuidLinks(list.length);
+          const totalClicks = list.reduce((sum: number, box: any) => sum + (box.clicks || 0), 0);
+          setClicksCount(totalClicks);
+        }
+      } catch (error) {
+        console.error("Ошибка при сборке статистики на фронтенде:", error);
+      }
+    };
+
+    fetchAllData();
+  }, [setTotalReviews, setModeratedReviews, setBlockedReviews]);
 
   return (
     <div className="h-[calc(100vh-3rem)] grid grid-rows-[110px_1fr_280px] gap-4 min-h-0 overflow-hidden">
       <div className="grid grid-cols-[1.2fr_1.4fr_1.2fr_1.2fr_1.4fr_1.8fr] gap-4 w-full min-h-0">
         <Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
-          <h2 className="text-xs text-center text-t-muted truncate w-full">
-            Всего отзывов
-          </h2>
+          <h2 className="text-xs text-center text-t-muted truncate w-full">Всего отзывов</h2>
           <h3 className="text-2xl font-bold text-t-blue truncate w-full text-center leading-none">
             {totalReviews.toLocaleString("en-US")}
           </h3>
-          <h2 className="text-[11px] text-center text-t-main truncate w-full">
-            +{totalReviewsPercent.toFixed(0)}% за неделю
-          </h2>
+          <h2 className="text-[11px] text-center text-t-main truncate w-full">+{totalReviewsPercent}% за неделю</h2>
         </Card>
 
         <Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
-          <h2 className="text-xs text-center text-t-muted truncate w-full">
-            Прошли модерацию
-          </h2>
+          <h2 className="text-xs text-center text-t-muted truncate w-full">Прошли модерацию</h2>
           <h3 className="text-2xl font-bold text-t-green truncate w-full text-center leading-none">
             {moderatedReviews.toLocaleString("en-US")}
           </h3>
-          <h2 className="text-[11px] text-center text-t-main truncate w-full">
-            +{moderatedReviewsPercent.toFixed(0)}% от всех
-          </h2>
+          <h2 className="text-[11px] text-center text-t-main truncate w-full">+{moderatedReviewsPercent}% от всех</h2>
         </Card>
 
         <Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
-          <h2 className="text-xs text-center text-t-muted truncate w-full">
-            Заблокировано
-          </h2>
+          <h2 className="text-xs text-center text-t-muted truncate w-full">Заблокировано</h2>
           <h3 className="text-2xl font-bold text-t-red truncate w-full text-center leading-none">
             {blockedReviews.toLocaleString("en-US")}
           </h3>
-          <h2 className="text-[11px] text-center text-t-main truncate w-full">
-            +{blockedReviewsPercent.toFixed(0)}% за неделю
-          </h2>
+          <h2 className="text-[11px] text-center text-t-main truncate w-full">+{blockedReviewsPercent}% за неделю</h2>
         </Card>
 
         <Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
-          <h2 className="text-xs text-center text-t-muted truncate w-full">
-            UUID-ссылок
-          </h2>
+          <h2 className="text-xs text-center text-t-muted truncate w-full">UUID-ссылок</h2>
           <h3 className="text-2xl font-bold text-t-purple truncate w-full text-center leading-none">
             {uuidLinks.toLocaleString("en-US")}
           </h3>
-          <h2 className="text-[11px] text-center text-t-main truncate w-full">
-            +{uuidLinksPercent.toFixed(0)}% за неделю
-          </h2>
+          <h2 className="text-[11px] text-center text-t-main truncate w-full">+{uuidLinksPercent}% за неделю</h2>
         </Card>
 
         <Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
-          <h2 className="text-xs text-center text-t-muted truncate w-full">
-            Количество переходов
-          </h2>
+          <h2 className="text-xs text-center text-t-muted truncate w-full">Количество переходов</h2>
           <h3 className="text-2xl font-bold text-t-yellow truncate w-full text-center leading-none">
             {clicksCount.toLocaleString("en-US")}
           </h3>
-          <h2 className="text-[11px] text-center text-t-main truncate w-full">
-            +{clicksPercent.toFixed(0)}% за неделю
-          </h2>
+          <h2 className="text-[11px] text-center text-t-main truncate w-full">+{clicksPercent}% за неделю</h2>
         </Card>
 
         <Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
-          <h2 className="text-xs text-center text-t-muted truncate w-full">
-            Дата последнего отзыва
-          </h2>
+          <h2 className="text-xs text-center text-t-muted truncate w-full">Дата последнего отзыва</h2>
           <h3 className="text-2xl font-bold text-t-orange truncate w-full text-center leading-none py-1">
             {lastReviewDate}
           </h3>
@@ -184,51 +209,38 @@ const Statistics = ({
         <Card className="h-full min-h-0 flex flex-col p-4! overflow-hidden">
           <div className="flex flex-row justify-between mb-2 shrink-0">
             <h2 className="text-[16px] font-normal">Последние отзывы</h2>
-            <p className="text-t-muted text-sm cursor-pointer hover:text-white transition-colors">
-              Смотреть все
-            </p>
+            <p className="text-t-muted text-sm cursor-pointer hover:text-white transition-colors">Смотреть все</p>
           </div>
-
           <LatestReviewsCard />
         </Card>
 
         <Card className="h-full min-h-0 flex flex-col p-4! overflow-hidden">
           <div className="flex flex-row justify-between mb-2 shrink-0">
             <h2 className="text-[16px] font-normal">UUID ссылки</h2>
-            <p className="text-t-muted text-sm cursor-pointer hover:text-white transition-colors">
-              Смотреть все
-            </p>
+            <p className="text-t-muted text-sm cursor-pointer hover:text-white transition-colors">Смотреть все</p>
           </div>
           <BoxList />
         </Card>
       </div>
+
       <div className="grid grid-cols-[1.5fr_1fr] gap-4 min-h-0 overflow-hidden h-full">
         <ActivityChart />
         <Card className="h-full flex flex-col justify-between p-4! overflow-hidden">
-          <h2 className="text-[16px] font-normal mb-2 shrink-0">
-            Состояние системы
-          </h2>
+          <h2 className="text-[16px] font-normal mb-2 shrink-0">Состояние системы</h2>
           <div className="flex-1 flex flex-col justify-between border border-ui-border/50 rounded-xl bg-zinc-950/20 min-h-0 overflow-hidden">
             {[
               { name: "API сервис", status: "Работает", ok: true },
-              { name: "База данных", status: "Не работает", ok: false },
+              { name: "База данных", status: "Работает", ok: true },
               { name: "Телеграмм бот", status: "Работает", ok: true },
               { name: "Сайт пользователя", status: "Работает", ok: true },
               { name: "Сайт получателя", status: "Работает", ok: true },
             ].map((service, index, arr) => (
               <div
                 key={service.name}
-                className={`flex flex-row justify-between items-center px-4 text-sm flex-1
-                    ${index !== arr.length - 1 ? "border-b border-ui-border/40" : ""}`}
+                className={`flex flex-row justify-between items-center px-4 text-sm flex-1 ${index !== arr.length - 1 ? "border-b border-ui-border/40" : ""}`}
               >
-                <span className="text-t-main truncate mr-2">
-                  {service.name}
-                </span>
-                <span
-                  className={`font-medium shrink-0 ${service.ok ? "text-t-green" : "text-t-red"}`}
-                >
-                  {service.status}
-                </span>
+                <span className="text-t-main truncate mr-2">{service.name}</span>
+                <span className={`font-medium shrink-0 ${service.ok ? "text-t-green" : "text-t-red"}`}>{service.status}</span>
               </div>
             ))}
           </div>
@@ -269,7 +281,7 @@ export const Links = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch("http://localhost:8000/auth/my-boxes", {
+      const response = await fetch(`${API_BASE_URL}/auth/my-boxes`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -298,8 +310,7 @@ export const Links = () => {
 
     try {
       setIsCreating(true);
-      // Предполагается стандартный эндпоинт POST /box для генерации новой ссылки
-      const response = await fetch("http://localhost:8000/box", {
+      const response = await fetch(`${API_BASE_URL}/box`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -388,7 +399,7 @@ export const Reviews = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch("http://localhost:8000/auth/my-feedbacks", {
+      const response = await fetch(`${API_BASE_URL}/auth/my-feedbacks`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,

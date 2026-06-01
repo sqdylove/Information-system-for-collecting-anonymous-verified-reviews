@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import Review from "./review"; // Укажите правильный путь к вашему компоненту Review
-import Card from "../../../small/card/card";
+import Review from "./review"; 
+import { API_BASE_URL } from "../../../../utils/api";
 
 interface FeedbackData {
   id?: string | number;
-  text?: string;       // Текст отзыва (или title, сверьте со своей схемой)
-  box_uuid?: string;   // UUID бокса, куда пришел отзыв
-  created_at?: string; // Время создания
+  text?: string;      
+  box_uuid?: string;
+  created_at?: string;
 }
 
 export default function LatestReviewsCard() {
@@ -25,7 +25,7 @@ export default function LatestReviewsCard() {
       }
 
       try {
-        const response = await fetch("http://localhost:8000/auth/my-feedbacks", {
+        const response = await fetch(`${API_BASE_URL}/auth/my-feedbacks`, {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`,
@@ -62,7 +62,6 @@ export default function LatestReviewsCard() {
         <div className="text-t-muted text-sm p-2">У вас еще нет полученных отзывов</div>
       ) : (
         feedbacks.map((item, index) => {
-          // Привязываем данные из API к вашему компоненту <Review />
           const reviewText = item.text || "Без текста";
           const targetUUID = item.box_uuid || "Неизвестный UUID";
           const timeLabel = item.created_at || "Недавно";

@@ -13,34 +13,6 @@ interface Props {
 
 export default function UserCode({ className = "", setUUID, setScreen }: Props) {
   const [UUID, setUuid] = useState<string>("")
-  // useEffect(() => {
-  //   const checkBox = async () => {
-  //     try {
-  //       const response = await fetch(`http://localhost:8000/box/${UUID}`, {
-  //         method: "GET",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           "X-Owner-Token": "!!!!!!"
-  //         },
-  //       });
-
-  //       if (!response.ok) {
-  //         const errorData = await response.json();
-  //         throw new Error(errorData.detail || "Ошибка получения данных бокса");
-  //       }
-
-  //       const data = await response.json();
-  //       console.log("Данные бокса успешно получены:", data);
-
-  //     } catch (error) {
-  //       console.error("Ошибка при отправке запроса:", error);
-  //     }
-  //   };
-
-  //   if (UUID) {
-  //     checkBox();
-  //   }
-  // }, [UUID]);
   return (
     <Card className={`${className}`}>
       <div className="flex flex-row justify-between">
