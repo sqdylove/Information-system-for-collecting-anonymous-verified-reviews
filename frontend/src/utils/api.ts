@@ -12,24 +12,4 @@ export const authorizedFetch = async (url: string, options: RequestInit = {}) =>
   return fetch(url, { ...options, headers });
 };
 
-// example:
-// import { authorizedFetch } from "../utils/api";
-
-// const sendFeedback = async (uuid: string, text: string) => {
-//   try {
-//     const response = await authorizedFetch(`http://localhost:8000/box/${uuid}/feedback`, {
-//       method: "POST",
-//       body: JSON.stringify({ text }),
-//     });
-
-//     if (!response.ok) {
-//       const errorData = await response.json();
-//       throw new Error(errorData.detail || "Ошибка");
-//     }
-
-//     return await response.json();
-//   } catch (error) {
-//     console.error(error);
-//     throw error;
-//   }
-// };
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
