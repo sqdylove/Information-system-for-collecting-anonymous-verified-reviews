@@ -67,7 +67,6 @@ export default function BoxList() {
   return (
     <div className="overflow-y-auto flex-1 pr-1 custom-scroll">
       {boxes.map((box, index) => {
-        // Задаем дефолтные значения (fallbacks) на случай, если бэкенд не возвращает эти поля
         const clicksCount = box.clicks !== undefined ? box.clicks.toString() : "0";
         const boxUUID = box.uuid || `ID-${box.id}` || "Неизвестный UUID";
         const creationDate = box.date || "24.05.2026";

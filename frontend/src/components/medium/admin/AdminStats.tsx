@@ -366,6 +366,12 @@ export const Links = () => {
   );
 };
 
+interface FeedbackData {
+  id?: string | number;
+  text?: string;
+  box_uuid?: string;
+  created_at?: string;
+}
 export const Reviews = () => {
   const [feedbacks, setFeedbacks] = useState<FeedbackData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -410,8 +416,8 @@ export const Reviews = () => {
   }, [fetchFeedbacks]);
 
   return (
-    <div className="h-full">
-      <div className="w-full flex flex-row justify-end gap-6 mb-3">
+    <div className="h-full w-full flex flex-col min-w-0 overflow-hidden">
+      <div className="w-full flex flex-row justify-end gap-6 mb-3 shrink-0">
         <Button
           className="pl-16 pr-16"
           text={isLoading ? "Загрузка..." : "Обновить"}
@@ -419,7 +425,7 @@ export const Reviews = () => {
         />
       </div>
 
-      <div className="h-[calc(100vh-8rem)] flex flex-col gap-4 min-h-0 overflow-y-auto flex-1 pr-1 custom-scroll">
+      <div className="h-[calc(100vh-8rem)] w-full min-w-0 flex flex-col gap-4 overflow-y-auto flex-1 pr-1 custom-scroll">
         {isLoading && feedbacks.length === 0 ? (
           <div className="text-t-muted text-sm p-4">Загрузка отзывов...</div>
         ) : error ? (
@@ -428,12 +434,13 @@ export const Reviews = () => {
           <div className="text-t-muted text-sm p-4">У вас еще нет полученных отзывов</div>
         ) : (
           feedbacks.map((item, index) => (
-            <Review
-              key={item.id || index}
-              title={item.text || "Без текста"}
-              UUID={item.box_uuid || "Неизвестный UUID"}
-              timeAgo={item.created_at || "Недавно"}
-            />
+            <div key={item.id || index} className="w-full min-w-0 block">
+              <Review
+                title={item.text || "Без текста"}
+                UUID={item.box_uuid || "Неизвестный UUID"}
+                timeAgo={item.created_at || "Недавно"}
+              />
+            </div>
           ))
         )}
       </div>
