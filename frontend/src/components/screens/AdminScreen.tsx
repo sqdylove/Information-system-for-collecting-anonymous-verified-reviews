@@ -14,18 +14,23 @@ interface AdminScreenProps {
   setAuthToken: (value: string | null) => void;
 }
 
-export default function AdminScreen({ user, screen, setScreen, setAuthToken }: AdminScreenProps) {
+export default function AdminScreen({
+  user,
+  screen,
+  setScreen,
+  setAuthToken,
+}: AdminScreenProps) {
   return (
     <>
       {user != null ? (
-        <AdminPanel setAuthToken={setAuthToken} setScreen={setScreen} />)
-        : (
-          <AuthCard
-            screen={screen}
-            setScreen={setScreen}
-            setAuthToken={setAuthToken}
-          />
-        )}
+        <AdminPanel setAuthToken={setAuthToken} setScreen={setScreen} />
+      ) : (
+        <AuthCard
+          screen={screen}
+          setScreen={setScreen}
+          setAuthToken={setAuthToken}
+        />
+      )}
     </>
   );
 }

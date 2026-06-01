@@ -4,7 +4,7 @@ interface ReviewProps {
   clicks: string;
   UUID: string;
   date: string;
-  isActive:string;
+  isActive: string;
   UUIDScreen?: boolean;
 }
 

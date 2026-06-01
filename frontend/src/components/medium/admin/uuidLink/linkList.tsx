@@ -18,7 +18,7 @@ export default function BoxList() {
   useEffect(() => {
     const fetchBoxes = async () => {
       const token = localStorage.getItem("token");
-      
+
       if (!token) {
         setError("Токен авторизации не найден");
         setIsLoading(false);
@@ -29,18 +29,20 @@ export default function BoxList() {
         const response = await fetch(`${API_BASE_URL}/auth/my-boxes`, {
           method: "GET",
           headers: {
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.detail || "Не удалось загрузить UUID-ссылки");
+          throw new Error(
+            errorData.detail || "Не удалось загрузить UUID-ссылки"
+          );
         }
 
         const data = await response.json();
-        setBoxes(data.boxes || []); 
+        setBoxes(data.boxes || []);
       } catch (err: any) {
         console.error("Ошибка при получении боксов:", err);
         setError(err.message || "Ошибка соединения с сервером");
@@ -61,13 +63,18 @@ export default function BoxList() {
   }
 
   if (boxes.length === 0) {
-    return <div className="text-t-muted text-sm p-4">У вас еще нет созданных UUID-ссылок</div>;
+    return (
+      <div className="text-t-muted text-sm p-4">
+        У вас еще нет созданных UUID-ссылок
+      </div>
+    );
   }
 
   return (
     <div className="overflow-y-auto flex-1 pr-1 custom-scroll">
       {boxes.map((box, index) => {
-        const clicksCount = box.clicks !== undefined ? box.clicks.toString() : "0";
+        const clicksCount =
+          box.clicks !== undefined ? box.clicks.toString() : "0";
         const boxUUID = box.uuid || `ID-${box.id}` || "Неизвестный UUID";
         const creationDate = box.date || "24.05.2026";
         const status = box.isActive || "Активна";

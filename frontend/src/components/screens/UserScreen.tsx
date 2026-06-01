@@ -5,10 +5,10 @@ import UserReview from "../medium/user/UserReview/UserReview";
 
 interface UserScreenProps {
   screen: string;
-  setScreen: (value: "main" | "sender" | "recipient") => void
+  setScreen: (value: "main" | "sender" | "recipient") => void;
   UUIDCODE: string | null;
-  UUID: string | null
-  setUUID: (value: string | null) => void
+  UUID: string | null;
+  setUUID: (value: string | null) => void;
 }
 
 export default function UserScreen({
@@ -16,7 +16,7 @@ export default function UserScreen({
   setScreen,
   UUIDCODE,
   UUID,
-  setUUID
+  setUUID,
 }: UserScreenProps) {
   return (
     <div className="h-full w-screen flex flex-col items-center p-4 md:p-8 pt-8 pb-4 overflow-y-auto overflow-x-hidden select-none text-white relative">
@@ -27,12 +27,24 @@ export default function UserScreen({
               <UserInfo />
             </div>
             <div className="w-full max-w-160 transition-all duration-300">
-              <UserCode UUIDCODE={UUIDCODE} setScreen={setScreen} screen={screen} setUUID={setUUID} />
+              <UserCode
+                UUIDCODE={UUIDCODE}
+                setScreen={setScreen}
+                screen={screen}
+                setUUID={setUUID}
+              />
             </div>
           </div>
         ) : (
           <div className="w-full max-w-140 transition-all duration-300">
-            <UserReview setUUID={setUUID} UUIDCODE={UUIDCODE} onBack={() => { setUUID(null); setScreen("sender") }} />
+            <UserReview
+              setUUID={setUUID}
+              UUIDCODE={UUIDCODE}
+              onBack={() => {
+                setUUID(null);
+                setScreen("sender");
+              }}
+            />
           </div>
         )}
       </div>

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import Review from "./review"; 
+import Review from "./review";
 import { API_BASE_URL } from "../../../../utils/api";
 
 interface FeedbackData {
   id?: string | number;
-  text?: string;      
+  text?: string;
   box_uuid?: string;
   created_at?: string;
 }
@@ -28,7 +28,7 @@ export default function LatestReviewsCard() {
         const response = await fetch(`${API_BASE_URL}/auth/my-feedbacks`, {
           method: "GET",
           headers: {
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
@@ -59,7 +59,9 @@ export default function LatestReviewsCard() {
       ) : error ? (
         <div className="text-t-red text-sm p-2">{error}</div>
       ) : feedbacks.length === 0 ? (
-        <div className="text-t-muted text-sm p-2">У вас еще нет полученных отзывов</div>
+        <div className="text-t-muted text-sm p-2">
+          У вас еще нет полученных отзывов
+        </div>
       ) : (
         feedbacks.map((item, index) => {
           const reviewText = item.text || "Без текста";

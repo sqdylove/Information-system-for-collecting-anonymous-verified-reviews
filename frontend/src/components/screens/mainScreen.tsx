@@ -14,7 +14,7 @@ interface MainScreenProps {
   screen: "main" | "sender" | "recipient";
   setScreen: (value: "main" | "sender" | "recipient") => void;
   setUUID: (value: string | null) => void;
-  user: User | null; 
+  user: User | null;
   setAuthToken: (value: string | null) => void;
 }
 
@@ -24,7 +24,7 @@ export default function MainScreen({
   setScreen,
   setUUID,
   user,
-  setAuthToken
+  setAuthToken,
 }: MainScreenProps) {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -37,14 +37,37 @@ export default function MainScreen({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
   if (UUID != null) {
-    return <UserScreen UUIDCODE={UUID} screen={screen} setScreen={setScreen} UUID={UUID} setUUID={setUUID} />
+    return (
+      <UserScreen
+        UUIDCODE={UUID}
+        screen={screen}
+        setScreen={setScreen}
+        UUID={UUID}
+        setUUID={setUUID}
+      />
+    );
   }
   if (screen === "sender") {
-    return <UserScreen screen={screen} setScreen={setScreen} UUIDCODE={UUID} UUID={UUID} setUUID={setUUID} />
+    return (
+      <UserScreen
+        screen={screen}
+        setScreen={setScreen}
+        UUIDCODE={UUID}
+        UUID={UUID}
+        setUUID={setUUID}
+      />
+    );
   }
   if (screen === "recipient") {
     // Прокидываем переданные сверху пропсы внутрь AdminScreen
-    return <AdminScreen screen={screen} setScreen={setScreen} user={user} setAuthToken={setAuthToken} />
+    return (
+      <AdminScreen
+        screen={screen}
+        setScreen={setScreen}
+        user={user}
+        setAuthToken={setAuthToken}
+      />
+    );
   }
   return (
     <div className="min-h-screen w-screen flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto overflow-x-hidden select-none text-white relative">
@@ -64,15 +87,25 @@ export default function MainScreen({
         </Card>
         <Card className="w-full max-w-2xl">
           <h1 className="mb-3 leading-relaxed">Выбор типа?</h1>
-          <p className="text-t-muted text-xs mb-4">Выберите отправителя или получателя</p>
+          <p className="text-t-muted text-xs mb-4">
+            Выберите отправителя или получателя
+          </p>
           <div className="flex flex-row justify-between items-center gap-4 w-full">
-            <Button text={"Войти как отправитель"} onClick={() => setScreen("sender")}></Button>
-            <Button disabled={isMobile} className="pointer-events-none opacity-40 cursor-not-allowed md:pointer-events-auto md:opacity-100 md:cursor-pointer" text={"Войти как получатель"} onClick={() => setScreen("recipient")}></Button>
+            <Button
+              text={"Войти как отправитель"}
+              onClick={() => setScreen("sender")}
+            ></Button>
+            <Button
+              disabled={isMobile}
+              className="pointer-events-none opacity-40 cursor-not-allowed md:pointer-events-auto md:opacity-100 md:cursor-pointer"
+              text={"Войти как получатель"}
+              onClick={() => setScreen("recipient")}
+            ></Button>
           </div>
         </Card>
       </div>
     </div>
-  )
+  );
 }
 
 interface ListElemProps {

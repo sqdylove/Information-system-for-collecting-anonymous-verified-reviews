@@ -13,7 +13,9 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [screen, setScreen] = useState<"main" | "sender" | "recipient">("main");
-  const [authToken, setAuthToken] = useState<string | null>(() => localStorage.getItem("token"));
+  const [authToken, setAuthToken] = useState<string | null>(() =>
+    localStorage.getItem("token")
+  );
 
   const [UUID, setUUID] = useState<string | null>(() => {
     const queryParams = new URLSearchParams(window.location.search);
@@ -21,10 +23,11 @@ export default function App() {
   });
 
   const isElectron =
-    typeof window !== "undefined" &&
-    typeof window.process !== "undefined" &&
-    (window.process as any).type === "renderer" ||
-    (typeof navigator !== "undefined" && navigator.userAgent.toLowerCase().includes("electron"));
+    (typeof window !== "undefined" &&
+      typeof window.process !== "undefined" &&
+      (window.process as any).type === "renderer") ||
+    (typeof navigator !== "undefined" &&
+      navigator.userAgent.toLowerCase().includes("electron"));
 
   useEffect(() => {
     const autoLogin = async () => {
@@ -35,7 +38,6 @@ export default function App() {
       }
       const storedToken = localStorage.getItem("token");
 
-
       if (!storedToken) {
         setIsLoading(false);
         return;
@@ -45,7 +47,7 @@ export default function App() {
         const response = await fetch(`${API_BASE_URL}/auth/me`, {
           method: "GET",
           headers: {
-            "Authorization": `Bearer ${storedToken}`,
+            Authorization: `Bearer ${storedToken}`,
             "Content-Type": "application/json",
           },
         });
@@ -75,7 +77,13 @@ export default function App() {
     if (!authToken) {
       return <AuthCard setAuthToken={setAuthToken} setScreen={setScreen} />;
     }
-    return <AdminScreen setScreen={setScreen} user={user} setAuthToken={setAuthToken} />;
+    return (
+      <AdminScreen
+        setScreen={setScreen}
+        user={user}
+        setAuthToken={setAuthToken}
+      />
+    );
   }
   if (authToken && screen === "recipient") {
     return (

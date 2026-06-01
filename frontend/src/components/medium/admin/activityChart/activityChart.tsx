@@ -35,7 +35,7 @@ export default function ActivityChart() {
         const response = await fetch(`${API_BASE_URL}/auth/my-feedbacks`, {
           method: "GET",
           headers: {
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
@@ -62,7 +62,8 @@ export default function ActivityChart() {
     const now = new Date();
 
     // Хелпер для обнуления часов (работаем только с датами)
-    const cloneDateWithoutTime = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const cloneDateWithoutTime = (d: Date) =>
+      new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
     // Функция генерации пустых точек для ровного шага осей
     const generateEmptyDays = (count: number) => {
@@ -70,18 +71,27 @@ export default function ActivityChart() {
       for (let i = count - 1; i >= 0; i--) {
         const d = new Date();
         d.setDate(now.getDate() - i);
-        const dayLabel = d.toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
-        result.push({ dateKey: cloneDateWithoutTime(d).getTime(), day: dayLabel, total: 0, moderated: 0, blocked: 0 });
+        const dayLabel = d.toLocaleDateString("ru-RU", {
+          day: "numeric",
+          month: "short",
+        });
+        result.push({
+          dateKey: cloneDateWithoutTime(d).getTime(),
+          day: dayLabel,
+          total: 0,
+          moderated: 0,
+          blocked: 0,
+        });
       }
       return result;
     };
 
     if (days === "7 дней") {
       const base = generateEmptyDays(7);
-      feedbacks.forEach(item => {
+      feedbacks.forEach((item) => {
         if (!item.created_at) return;
         const fDate = cloneDateWithoutTime(new Date(item.created_at)).getTime();
-        const point = base.find(p => p.dateKey === fDate);
+        const point = base.find((p) => p.dateKey === fDate);
         if (point) {
           point.total += 1;
           if (item.is_moderated !== false) point.moderated += 1;
@@ -93,10 +103,10 @@ export default function ActivityChart() {
 
     if (days === "14 дней") {
       const base = generateEmptyDays(14);
-      feedbacks.forEach(item => {
+      feedbacks.forEach((item) => {
         if (!item.created_at) return;
         const fDate = cloneDateWithoutTime(new Date(item.created_at)).getTime();
-        const point = base.find(p => p.dateKey === fDate);
+        const point = base.find((p) => p.dateKey === fDate);
         if (point) {
           point.total += 1;
           if (item.is_moderated !== false) point.moderated += 1;
@@ -109,10 +119,10 @@ export default function ActivityChart() {
 
     if (days === "30 дней") {
       const base = generateEmptyDays(30);
-      feedbacks.forEach(item => {
+      feedbacks.forEach((item) => {
         if (!item.created_at) return;
         const fDate = cloneDateWithoutTime(new Date(item.created_at)).getTime();
-        const point = base.find(p => p.dateKey === fDate);
+        const point = base.find((p) => p.dateKey === fDate);
         if (point) {
           point.total += 1;
           if (item.is_moderated !== false) point.moderated += 1;
@@ -125,13 +135,32 @@ export default function ActivityChart() {
 
     if (days === "Всё время") {
       // Группируем по месяцам текущего года
-      const months = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
-      const base = months.map((m, idx) => ({ monthIdx: idx, day: m, total: 0, moderated: 0, blocked: 0 }));
-      
-      feedbacks.forEach(item => {
+      const months = [
+        "Янв",
+        "Фев",
+        "Мар",
+        "Апр",
+        "Май",
+        "Июн",
+        "Июл",
+        "Авг",
+        "Сен",
+        "Окт",
+        "Ноя",
+        "Дек",
+      ];
+      const base = months.map((m, idx) => ({
+        monthIdx: idx,
+        day: m,
+        total: 0,
+        moderated: 0,
+        blocked: 0,
+      }));
+
+      feedbacks.forEach((item) => {
         if (!item.created_at) return;
         const fDate = new Date(item.created_at);
-        const point = base.find(p => p.monthIdx === fDate.getMonth());
+        const point = base.find((p) => p.monthIdx === fDate.getMonth());
         if (point) {
           point.total += 1;
           if (item.is_moderated !== false) point.moderated += 1;
@@ -160,7 +189,12 @@ export default function ActivityChart() {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </div>
           {isOpen && (
@@ -200,11 +234,29 @@ export default function ActivityChart() {
 
       <div className="flex-1 w-full min-h-0 text-[11px] text-t-muted **:outline-none">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={currentData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
-            <CartesianGrid stroke="#1e1e24" strokeDasharray="0" vertical={false} />
+          <LineChart
+            data={currentData}
+            margin={{ top: 5, right: 5, left: -25, bottom: 0 }}
+          >
+            <CartesianGrid
+              stroke="#1e1e24"
+              strokeDasharray="0"
+              vertical={false}
+            />
 
-            <XAxis dataKey="day" stroke="#52525b" tickLine={false} axisLine={false} dy={10} />
-            <YAxis stroke="#52525b" tickLine={false} axisLine={false} allowDecimals={false} />
+            <XAxis
+              dataKey="day"
+              stroke="#52525b"
+              tickLine={false}
+              axisLine={false}
+              dy={10}
+            />
+            <YAxis
+              stroke="#52525b"
+              tickLine={false}
+              axisLine={false}
+              allowDecimals={false}
+            />
 
             <Tooltip
               cursor={false}

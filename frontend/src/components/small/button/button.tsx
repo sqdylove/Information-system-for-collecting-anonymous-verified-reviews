@@ -13,12 +13,12 @@ export default function Button({
   text,
   w = "fit",
   className = "",
-  onClick = () => { },
+  onClick = () => {},
   children,
   disabled = false,
 }: ButtonProps) {
-  const fontStyles = disabled 
-    ? "text-zinc-600 font-normal text-[15px]" 
+  const fontStyles = disabled
+    ? "text-zinc-600 font-normal text-[15px]"
     : "text-white font-normal text-[15px]";
 
   const baseStyles = disabled

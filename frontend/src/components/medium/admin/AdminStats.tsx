@@ -13,7 +13,10 @@ interface AdminPanelProps {
   setScreen: (value: "main" | "sender" | "recipient") => void;
 }
 
-export default function AdminPanel({ setAuthToken, setScreen }: AdminPanelProps) {
+export default function AdminPanel({
+  setAuthToken,
+  setScreen,
+}: AdminPanelProps) {
   const [ActiveTab, setActiveTab] = useState<
     "statistics" | "links" | "reviews"
   >("statistics");
@@ -116,13 +119,16 @@ export const Statistics = ({
     const fetchAllData = async () => {
       try {
         const headers = {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         };
 
         const [feedbacksRes, boxesRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/auth/my-feedbacks`, { method: "GET", headers }),
-          fetch(`${API_BASE_URL}/auth/my-boxes`, { method: "GET", headers })
+          fetch(`${API_BASE_URL}/auth/my-feedbacks`, {
+            method: "GET",
+            headers,
+          }),
+          fetch(`${API_BASE_URL}/auth/my-boxes`, { method: "GET", headers }),
         ]);
 
         if (feedbacksRes.ok) {
@@ -130,7 +136,9 @@ export const Statistics = ({
           const list = feedbacksData.feedbacks || [];
 
           setTotalReviews(list.length);
-          const approved = list.filter((f: any) => f.is_moderated !== false).length;
+          const approved = list.filter(
+            (f: any) => f.is_moderated !== false
+          ).length;
           setModeratedReviews(approved);
           setBlockedReviews(list.length - approved);
           if (list.length > 0 && list[0].created_at) {
@@ -142,7 +150,10 @@ export const Statistics = ({
           const boxesData = await boxesRes.json();
           const list = boxesData.boxes || [];
           setUuidLinks(list.length);
-          const totalClicks = list.reduce((sum: number, box: any) => sum + (box.clicks || 0), 0);
+          const totalClicks = list.reduce(
+            (sum: number, box: any) => sum + (box.clicks || 0),
+            0
+          );
           setClicksCount(totalClicks);
         }
       } catch (error) {
@@ -157,47 +168,69 @@ export const Statistics = ({
     <div className="h-[calc(100vh-3rem)] grid grid-rows-[110px_1fr_280px] gap-4 min-h-0 overflow-hidden">
       <div className="grid grid-cols-[1.2fr_1.4fr_1.2fr_1.2fr_1.4fr_1.8fr] gap-4 w-full min-h-0">
         <Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
-          <h2 className="text-xs text-center text-t-muted truncate w-full">Всего отзывов</h2>
+          <h2 className="text-xs text-center text-t-muted truncate w-full">
+            Всего отзывов
+          </h2>
           <h3 className="text-2xl font-bold text-t-blue truncate w-full text-center leading-none">
             {totalReviews.toLocaleString("en-US")}
           </h3>
-          <h2 className="text-[11px] text-center text-t-main truncate w-full">+{totalReviewsPercent}% за неделю</h2>
+          <h2 className="text-[11px] text-center text-t-main truncate w-full">
+            +{totalReviewsPercent}% за неделю
+          </h2>
         </Card>
 
         <Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
-          <h2 className="text-xs text-center text-t-muted truncate w-full">Прошли модерацию</h2>
+          <h2 className="text-xs text-center text-t-muted truncate w-full">
+            Прошли модерацию
+          </h2>
           <h3 className="text-2xl font-bold text-t-green truncate w-full text-center leading-none">
             {moderatedReviews.toLocaleString("en-US")}
           </h3>
-          <h2 className="text-[11px] text-center text-t-main truncate w-full">+{moderatedReviewsPercent}% от всех</h2>
+          <h2 className="text-[11px] text-center text-t-main truncate w-full">
+            +{moderatedReviewsPercent}% от всех
+          </h2>
         </Card>
 
         <Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
-          <h2 className="text-xs text-center text-t-muted truncate w-full">Заблокировано</h2>
+          <h2 className="text-xs text-center text-t-muted truncate w-full">
+            Заблокировано
+          </h2>
           <h3 className="text-2xl font-bold text-t-red truncate w-full text-center leading-none">
             {blockedReviews.toLocaleString("en-US")}
           </h3>
-          <h2 className="text-[11px] text-center text-t-main truncate w-full">+{blockedReviewsPercent}% за неделю</h2>
+          <h2 className="text-[11px] text-center text-t-main truncate w-full">
+            +{blockedReviewsPercent}% за неделю
+          </h2>
         </Card>
 
         <Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
-          <h2 className="text-xs text-center text-t-muted truncate w-full">UUID-ссылок</h2>
+          <h2 className="text-xs text-center text-t-muted truncate w-full">
+            UUID-ссылок
+          </h2>
           <h3 className="text-2xl font-bold text-t-purple truncate w-full text-center leading-none">
             {uuidLinks.toLocaleString("en-US")}
           </h3>
-          <h2 className="text-[11px] text-center text-t-main truncate w-full">+{uuidLinksPercent}% за неделю</h2>
+          <h2 className="text-[11px] text-center text-t-main truncate w-full">
+            +{uuidLinksPercent}% за неделю
+          </h2>
         </Card>
 
         <Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
-          <h2 className="text-xs text-center text-t-muted truncate w-full">Количество переходов</h2>
+          <h2 className="text-xs text-center text-t-muted truncate w-full">
+            Количество переходов
+          </h2>
           <h3 className="text-2xl font-bold text-t-yellow truncate w-full text-center leading-none">
             {clicksCount.toLocaleString("en-US")}
           </h3>
-          <h2 className="text-[11px] text-center text-t-main truncate w-full">+{clicksPercent}% за неделю</h2>
+          <h2 className="text-[11px] text-center text-t-main truncate w-full">
+            +{clicksPercent}% за неделю
+          </h2>
         </Card>
 
         <Card className="h-full p-2.5 w-auto flex flex-col justify-between items-center overflow-hidden">
-          <h2 className="text-xs text-center text-t-muted truncate w-full">Дата последнего отзыва</h2>
+          <h2 className="text-xs text-center text-t-muted truncate w-full">
+            Дата последнего отзыва
+          </h2>
           <h3 className="text-2xl font-bold text-t-orange truncate w-full text-center leading-none py-1">
             {lastReviewDate}
           </h3>
@@ -209,7 +242,9 @@ export const Statistics = ({
         <Card className="h-full min-h-0 flex flex-col p-4! overflow-hidden">
           <div className="flex flex-row justify-between mb-2 shrink-0">
             <h2 className="text-[16px] font-normal">Последние отзывы</h2>
-            <p className="text-t-muted text-sm cursor-pointer hover:text-white transition-colors">Смотреть все</p>
+            <p className="text-t-muted text-sm cursor-pointer hover:text-white transition-colors">
+              Смотреть все
+            </p>
           </div>
           <LatestReviewsCard />
         </Card>
@@ -217,7 +252,9 @@ export const Statistics = ({
         <Card className="h-full min-h-0 flex flex-col p-4! overflow-hidden">
           <div className="flex flex-row justify-between mb-2 shrink-0">
             <h2 className="text-[16px] font-normal">UUID ссылки</h2>
-            <p className="text-t-muted text-sm cursor-pointer hover:text-white transition-colors">Смотреть все</p>
+            <p className="text-t-muted text-sm cursor-pointer hover:text-white transition-colors">
+              Смотреть все
+            </p>
           </div>
           <BoxList />
         </Card>
@@ -226,7 +263,9 @@ export const Statistics = ({
       <div className="grid grid-cols-[1.5fr_1fr] gap-4 min-h-0 overflow-hidden h-full">
         <ActivityChart />
         <Card className="h-full flex flex-col justify-between p-4! overflow-hidden">
-          <h2 className="text-[16px] font-normal mb-2 shrink-0">Состояние системы</h2>
+          <h2 className="text-[16px] font-normal mb-2 shrink-0">
+            Состояние системы
+          </h2>
           <div className="flex-1 flex flex-col justify-between border border-ui-border/50 rounded-xl bg-zinc-950/20 min-h-0 overflow-hidden">
             {[
               { name: "API сервис", status: "Работает", ok: true },
@@ -239,8 +278,14 @@ export const Statistics = ({
                 key={service.name}
                 className={`flex flex-row justify-between items-center px-4 text-sm flex-1 ${index !== arr.length - 1 ? "border-b border-ui-border/40" : ""}`}
               >
-                <span className="text-t-main truncate mr-2">{service.name}</span>
-                <span className={`font-medium shrink-0 ${service.ok ? "text-t-green" : "text-t-red"}`}>{service.status}</span>
+                <span className="text-t-main truncate mr-2">
+                  {service.name}
+                </span>
+                <span
+                  className={`font-medium shrink-0 ${service.ok ? "text-t-green" : "text-t-red"}`}
+                >
+                  {service.status}
+                </span>
               </div>
             ))}
           </div>
@@ -284,7 +329,7 @@ export const Links = () => {
       const response = await fetch(`${API_BASE_URL}/auth/my-boxes`, {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
@@ -313,7 +358,7 @@ export const Links = () => {
       const response = await fetch(`${API_BASE_URL}/box`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({}),
@@ -355,11 +400,15 @@ export const Links = () => {
 
       <div className="h-[calc(100vh-8rem)] flex flex-col gap-4 min-h-0 overflow-y-auto flex-1 pr-1 custom-scroll">
         {isLoading && boxes.length === 0 ? (
-          <div className="text-t-muted text-sm p-4">Загрузка списка ссылок...</div>
+          <div className="text-t-muted text-sm p-4">
+            Загрузка списка ссылок...
+          </div>
         ) : error ? (
           <div className="text-t-red text-sm p-4">{error}</div>
         ) : boxes.length === 0 ? (
-          <div className="text-t-muted text-sm p-4">У вас еще нет созданных UUID-ссылок</div>
+          <div className="text-t-muted text-sm p-4">
+            У вас еще нет созданных UUID-ссылок
+          </div>
         ) : (
           boxes.map((box, index) => (
             <UUIDLink
@@ -402,7 +451,7 @@ export const Reviews = () => {
       const response = await fetch(`${API_BASE_URL}/auth/my-feedbacks`, {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
@@ -442,7 +491,9 @@ export const Reviews = () => {
         ) : error ? (
           <div className="text-t-red text-sm p-4">{error}</div>
         ) : feedbacks.length === 0 ? (
-          <div className="text-t-muted text-sm p-4">У вас еще нет полученных отзывов</div>
+          <div className="text-t-muted text-sm p-4">
+            У вас еще нет полученных отзывов
+          </div>
         ) : (
           feedbacks.map((item, index) => (
             <div key={item.id || index} className="w-full min-w-0 block">

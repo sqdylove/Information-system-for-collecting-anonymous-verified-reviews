@@ -7,12 +7,16 @@ interface Props {
   setUUID: (value: string | null) => void;
   className?: string;
   screen: string;
-  setScreen: (value: "main" | "sender" | "recipient") => void
-  UUIDCODE: string | null
+  setScreen: (value: "main" | "sender" | "recipient") => void;
+  UUIDCODE: string | null;
 }
 
-export default function UserCode({ className = "", setUUID, setScreen }: Props) {
-  const [UUID, setUuid] = useState<string>("")
+export default function UserCode({
+  className = "",
+  setUUID,
+  setScreen,
+}: Props) {
+  const [UUID, setUuid] = useState<string>("");
   return (
     <Card className={`${className}`}>
       <div className="flex flex-row justify-between">
@@ -23,7 +27,10 @@ export default function UserCode({ className = "", setUUID, setScreen }: Props) 
           </p>
         </div>
         <button
-          onClick={() => { setUUID(null); setScreen('main'); }}
+          onClick={() => {
+            setUUID(null);
+            setScreen("main");
+          }}
           className="p-2 max-h-8 flex items-center border border-ui-border rounded-lg text-xs text-t-muted hover:text-white hover:bg-zinc-900 transition-all cursor-pointer select-none"
           title="Вернуться назад"
         >
@@ -43,12 +50,22 @@ export default function UserCode({ className = "", setUUID, setScreen }: Props) 
           <span>Назад</span>
         </button>
       </div>
-      <Input autoComplete="off" type="text" className="mb-3" placeholder="Введите UUID-код" w="full" value={UUID} onChange={setUuid} />
+      <Input
+        autoComplete="off"
+        type="text"
+        className="mb-3"
+        placeholder="Введите UUID-код"
+        w="full"
+        value={UUID}
+        onChange={setUuid}
+      />
       <Button
         className="mb-3"
         text="Продолжить"
         w="full"
-        onClick={() => { setUUID(UUID) }}
+        onClick={() => {
+          setUUID(UUID);
+        }}
       />
       <p className="text-t-muted text-xs mb-2">
         UUID обеспечивает доставку только нужному получателю
