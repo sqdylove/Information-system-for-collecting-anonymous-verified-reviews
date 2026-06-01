@@ -1,22 +1,37 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Button from "../../small/button/button";
 import Card from "../../small/card/card";
 import Review from "./review/review";
 import UUIDLink from "./uuidLink/uuidLink";
 import ActivityChart from "./activityChart/activityChart";
+import BoxList from "./uuidLink/linkList";
+import LatestReviewsCard from "./review/Reviews";
+import { API_BASE_URL } from "../../../utils/api";
 
-interface Props {
-  isAuth?: boolean;
-  setIsAuth: (value: boolean) => void;
+interface AdminPanelProps {
+  setAuthToken: (value: string | null) => void;
+  setScreen: (value: "main" | "sender" | "recipient") => void;
 }
 
-export default function AdminPanel({ setIsAuth }: Props) {
+export default function AdminPanel({
+  setAuthToken,
+  setScreen,
+}: AdminPanelProps) {
   const [ActiveTab, setActiveTab] = useState<
     "statistics" | "links" | "reviews"
   >("statistics");
-  const [totalReviews, setTotalReviews] = useState<number>(1248);
-  const [moderatedReviews, setModeratedReviews] = useState<number>(1062);
-  const [blockedReviews, setBlockedReviews] = useState<number>(174);
+
+  const [totalReviews, setTotalReviews] = useState<number>(0);
+  const [moderatedReviews, setModeratedReviews] = useState<number>(0);
+  const [blockedReviews, setBlockedReviews] = useState<number>(0);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.clear();
+    setScreen("main");
+    setAuthToken(null);
+  };
+
   return (
     <div className="h-screen p-6 text-white grid grid-cols-[350px_1fr] gap-4 overflow-hidden">
       <Card className="h-full">
@@ -39,10 +54,11 @@ export default function AdminPanel({ setIsAuth }: Props) {
             />
           </div>
           <div>
-            <Button text="Выход" w="full" onClick={() => setIsAuth(false)} />
+            <Button text="Выход" w="full" onClick={handleLogout} />
           </div>
         </div>
       </Card>
+
       {ActiveTab === "statistics" ? (
         <Statistics
           totalReviews={totalReviews}
@@ -63,14 +79,23 @@ export default function AdminPanel({ setIsAuth }: Props) {
 
 interface StatProps {
   totalReviews: number;
-  setTotalReviews?: (value: number) => void;
+  setTotalReviews: (value: number) => void;
   moderatedReviews: number;
-  setModeratedReviews?: (value: number) => void;
+  setModeratedReviews: (value: number) => void;
   blockedReviews: number;
-  setBlockedReviews?: (value: number) => void;
+  setBlockedReviews: (value: number) => void;
 }
 
-const Statistics = ({
+interface StatProps {
+  totalReviews: number;
+  setTotalReviews: (value: number) => void;
+  moderatedReviews: number;
+  setModeratedReviews: (value: number) => void;
+  blockedReviews: number;
+  setBlockedReviews: (value: number) => void;
+}
+
+export const Statistics = ({
   totalReviews,
   setTotalReviews,
   moderatedReviews,
@@ -78,21 +103,66 @@ const Statistics = ({
   blockedReviews,
   setBlockedReviews,
 }: StatProps) => {
-  const [totalReviewsPercent, setTotalReviewsPrecent] = useState<number>(
-    (totalReviews * 0.4) / 34
-  );
-  const [moderatedReviewsPercent, setModeratedReviewsPercent] =
-    useState<number>((moderatedReviews * 0.4) / 34);
-  const [blockedReviewsPercent, setBlockedReviewsPercent] = useState<number>(
-    (blockedReviews * 0.5) / 34
-  );
-  const [uuidLinks, setUuidLinks] = useState<number>(10);
-  const [uuidLinksPercent, setUuidLinksPercent] = useState<number>(5);
+  const [uuidLinks, setUuidLinks] = useState<number>(0);
+  const [clicksCount, setClicksCount] = useState<number>(0);
+  const [lastReviewDate, setLastReviewDate] = useState<string>("Нет отзывов");
 
-  const [clicksCount, setClicksCount] = useState<number>(23);
-  const [clicksPercent, setClicksPercent] = useState<number>(12);
+  const [totalReviewsPercent] = useState<number>(100);
+  const [moderatedReviewsPercent] = useState<number>(100);
+  const [blockedReviewsPercent] = useState<number>(0);
+  const [uuidLinksPercent] = useState<number>(100);
+  const [clicksPercent] = useState<number>(0);
 
-  const [lastReviewDate, setLastReviewDate] = useState<string>("24.05.2026");
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    const fetchAllData = async () => {
+      try {
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        };
+
+        const [feedbacksRes, boxesRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/auth/my-feedbacks`, {
+            method: "GET",
+            headers,
+          }),
+          fetch(`${API_BASE_URL}/auth/my-boxes`, { method: "GET", headers }),
+        ]);
+
+        if (feedbacksRes.ok) {
+          const feedbacksData = await feedbacksRes.json();
+          const list = feedbacksData.feedbacks || [];
+
+          setTotalReviews(list.length);
+          const approved = list.filter(
+            (f: any) => f.is_moderated !== false
+          ).length;
+          setModeratedReviews(approved);
+          setBlockedReviews(list.length - approved);
+          if (list.length > 0 && list[0].created_at) {
+            const rawDate = new Date(list[0].created_at);
+            setLastReviewDate(rawDate.toLocaleDateString("ru-RU"));
+          }
+        }
+        if (boxesRes.ok) {
+          const boxesData = await boxesRes.json();
+          const list = boxesData.boxes || [];
+          setUuidLinks(list.length);
+          const totalClicks = list.reduce(
+            (sum: number, box: any) => sum + (box.clicks || 0),
+            0
+          );
+          setClicksCount(totalClicks);
+        }
+      } catch (error) {
+        console.error("Ошибка при сборке статистики на фронтенде:", error);
+      }
+    };
+
+    fetchAllData();
+  }, [setTotalReviews, setModeratedReviews, setBlockedReviews]);
 
   return (
     <div className="h-[calc(100vh-3rem)] grid grid-rows-[110px_1fr_280px] gap-4 min-h-0 overflow-hidden">
@@ -105,7 +175,7 @@ const Statistics = ({
             {totalReviews.toLocaleString("en-US")}
           </h3>
           <h2 className="text-[11px] text-center text-t-main truncate w-full">
-            +{totalReviewsPercent.toFixed(0)}% за неделю
+            +{totalReviewsPercent}% за неделю
           </h2>
         </Card>
 
@@ -117,7 +187,7 @@ const Statistics = ({
             {moderatedReviews.toLocaleString("en-US")}
           </h3>
           <h2 className="text-[11px] text-center text-t-main truncate w-full">
-            +{moderatedReviewsPercent.toFixed(0)}% от всех
+            +{moderatedReviewsPercent}% от всех
           </h2>
         </Card>
 
@@ -129,7 +199,7 @@ const Statistics = ({
             {blockedReviews.toLocaleString("en-US")}
           </h3>
           <h2 className="text-[11px] text-center text-t-main truncate w-full">
-            +{blockedReviewsPercent.toFixed(0)}% за неделю
+            +{blockedReviewsPercent}% за неделю
           </h2>
         </Card>
 
@@ -141,7 +211,7 @@ const Statistics = ({
             {uuidLinks.toLocaleString("en-US")}
           </h3>
           <h2 className="text-[11px] text-center text-t-main truncate w-full">
-            +{uuidLinksPercent.toFixed(0)}% за неделю
+            +{uuidLinksPercent}% за неделю
           </h2>
         </Card>
 
@@ -153,7 +223,7 @@ const Statistics = ({
             {clicksCount.toLocaleString("en-US")}
           </h3>
           <h2 className="text-[11px] text-center text-t-main truncate w-full">
-            +{clicksPercent.toFixed(0)}% за неделю
+            +{clicksPercent}% за неделю
           </h2>
         </Card>
 
@@ -176,17 +246,7 @@ const Statistics = ({
               Смотреть все
             </p>
           </div>
-
-          <div className="overflow-y-auto flex-1 pr-1 custom-scroll">
-            {Array.from({ length: 10 }).map((_, index) => (
-              <Review
-                key={index}
-                title={"Lorem ipsum..."}
-                UUID={"cds321-zxc342-nhg64y6-xcvb6-mnf49m"}
-                timeAgo={"2 minuts ago"}
-              />
-            ))}
-          </div>
+          <LatestReviewsCard />
         </Card>
 
         <Card className="h-full min-h-0 flex flex-col p-4! overflow-hidden">
@@ -196,25 +256,10 @@ const Statistics = ({
               Смотреть все
             </p>
           </div>
-
-          <div className="overflow-y-auto flex-1 pr-1 custom-scroll">
-            {Array.from({ length: 10 }).map((_, index) => {
-              const randomStatus =
-                Math.random() < 0.5 ? "Активна" : "Неактивна";
-              const randomClicks = Math.floor(Math.random() * 150).toString();
-              return (
-                <UUIDLink
-                  key={index}
-                  clicks={randomClicks}
-                  UUID={`cds321-zxc342-nhg64y6-xcvb6-mnf49m`}
-                  date={"24.05.2026"}
-                  isActive={randomStatus}
-                />
-              );
-            })}
-          </div>
+          <BoxList />
         </Card>
       </div>
+
       <div className="grid grid-cols-[1.5fr_1fr] gap-4 min-h-0 overflow-hidden h-full">
         <ActivityChart />
         <Card className="h-full flex flex-col justify-between p-4! overflow-hidden">
@@ -224,15 +269,14 @@ const Statistics = ({
           <div className="flex-1 flex flex-col justify-between border border-ui-border/50 rounded-xl bg-zinc-950/20 min-h-0 overflow-hidden">
             {[
               { name: "API сервис", status: "Работает", ok: true },
-              { name: "База данных", status: "Не работает", ok: false },
+              { name: "База данных", status: "Работает", ok: true },
               { name: "Телеграмм бот", status: "Работает", ok: true },
               { name: "Сайт пользователя", status: "Работает", ok: true },
               { name: "Сайт получателя", status: "Работает", ok: true },
             ].map((service, index, arr) => (
               <div
                 key={service.name}
-                className={`flex flex-row justify-between items-center px-4 text-sm flex-1
-                    ${index !== arr.length - 1 ? "border-b border-ui-border/40" : ""}`}
+                className={`flex flex-row justify-between items-center px-4 text-sm flex-1 ${index !== arr.length - 1 ? "border-b border-ui-border/40" : ""}`}
               >
                 <span className="text-t-main truncate mr-2">
                   {service.name}
@@ -250,53 +294,218 @@ const Statistics = ({
     </div>
   );
 };
+interface BoxData {
+  id?: string | number;
+  uuid?: string;
+  clicks?: string | number;
+  date?: string;
+  isActive?: string;
+}
 
-const Links = () => {
+interface FeedbackData {
+  id?: string | number;
+  text?: string;
+  box_uuid?: string;
+  created_at?: string;
+}
+
+export const Links = () => {
+  const [boxes, setBoxes] = useState<BoxData[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState<boolean>(false);
+
+  const fetchBoxes = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Токен авторизации не найден");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch(`${API_BASE_URL}/auth/my-boxes`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Не удалось загрузить UUID-ссылки");
+      }
+
+      const data = await response.json();
+      setBoxes(data.boxes || []);
+    } catch (err: any) {
+      console.error("Ошибка при получении боксов:", err);
+      setError(err.message || "Ошибка соединения с сервером");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleCreateLink = async () => {
+    const token = localStorage.getItem("token");
+    if (!token || isCreating) return;
+
+    try {
+      setIsCreating(true);
+      const response = await fetch(`${API_BASE_URL}/box`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Не удалось создать ссылку");
+      }
+
+      // После успешного создания принудительно обновляем весь список
+      await fetchBoxes();
+    } catch (err: any) {
+      console.error("Ошибка создания ссылки:", err);
+      alert(err.message || "Не удалось создать ссылку");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBoxes();
+  }, [fetchBoxes]);
+
   return (
-    <>
-      <div className="h-full">
-        <div className="w-full flex flex-row justify-end gap-6 mb-3">
-          <Button className="pl-16 pr-16" text={"Обновить"}></Button>
-          <Button className="pl-16 pr-16" text={"Создать ссылку"}></Button>
-        </div>
-        <div className="h-[calc(100vh-8rem)] flex flex-col gap-4 min-h-0 overflow-y-auto flex-1 pr-1 custom-scroll">
-          {Array.from({ length: 15 }).map((_, index) => {
-            const randomStatus = Math.random() < 0.5 ? "Активна" : "Неактивна";
-            const randomClicks = Math.floor(Math.random() * 150).toString();
-            return (
-              <UUIDLink
-                key={index}
-                clicks={randomClicks}
-                UUID={`cds321-zxc342-nhg64y6-xcvb6-mnf49m`}
-                date={"24.05.2026"}
-                isActive={randomStatus}
-                UUIDScreen
-              />
-            );
-          })}
-        </div>
+    <div className="h-full">
+      <div className="w-full flex flex-row justify-end gap-6 mb-3">
+        <Button
+          className="pl-16 pr-16"
+          text={isLoading ? "Загрузка..." : "Обновить"}
+          onClick={fetchBoxes}
+        />
+        <Button
+          className="pl-16 pr-16"
+          text={isCreating ? "Создание..." : "Создать ссылку"}
+          onClick={handleCreateLink}
+        />
       </div>
-    </>
+
+      <div className="h-[calc(100vh-8rem)] flex flex-col gap-4 min-h-0 overflow-y-auto flex-1 pr-1 custom-scroll">
+        {isLoading && boxes.length === 0 ? (
+          <div className="text-t-muted text-sm p-4">
+            Загрузка списка ссылок...
+          </div>
+        ) : error ? (
+          <div className="text-t-red text-sm p-4">{error}</div>
+        ) : boxes.length === 0 ? (
+          <div className="text-t-muted text-sm p-4">
+            У вас еще нет созданных UUID-ссылок
+          </div>
+        ) : (
+          boxes.map((box, index) => (
+            <UUIDLink
+              key={box.id || index}
+              clicks={box.clicks !== undefined ? box.clicks.toString() : "0"}
+              UUID={box.uuid || "Неизвестный UUID"}
+              date={box.date || "24.05.2026"}
+              isActive={box.isActive || "Активна"}
+              UUIDScreen
+            />
+          ))
+        )}
+      </div>
+    </div>
   );
 };
-const Reviews = () => {
+
+interface FeedbackData {
+  id?: string | number;
+  text?: string;
+  box_uuid?: string;
+  created_at?: string;
+}
+export const Reviews = () => {
+  const [feedbacks, setFeedbacks] = useState<FeedbackData[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchFeedbacks = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Токен авторизации не найден");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch(`${API_BASE_URL}/auth/my-feedbacks`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Не удалось загрузить отзывы");
+      }
+
+      const data = await response.json();
+      setFeedbacks(data.feedbacks || []);
+    } catch (err: any) {
+      console.error("Ошибка при получении отзывов:", err);
+      setError(err.message || "Ошибка соединения с сервером");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchFeedbacks();
+  }, [fetchFeedbacks]);
+
   return (
-    <>
-      <div className="h-full">
-        <div className="w-full flex flex-row justify-end gap-6 mb-3">
-          <Button className="pl-16 pr-16" text={"Обновить"}></Button>
-        </div>
-        <div className="h-[calc(100vh-8rem)] flex flex-col gap-4 min-h-0 overflow-y-auto flex-1 pr-1 custom-scroll">
-          {Array.from({ length: 10 }).map((_, index) => (
-            <Review
-              key={index}
-              title={"Lorem ipsum..."}
-              UUID={"cds321-zxc342-nhg64y6-xcvb6-mnf49m"}
-              timeAgo={"2 minuts ago"}
-            />
-          ))}
-        </div>
+    <div className="h-full w-full flex flex-col min-w-0 overflow-hidden">
+      <div className="w-full flex flex-row justify-end gap-6 mb-3 shrink-0">
+        <Button
+          className="pl-16 pr-16"
+          text={isLoading ? "Загрузка..." : "Обновить"}
+          onClick={fetchFeedbacks}
+        />
       </div>
-    </>
+
+      <div className="h-[calc(100vh-8rem)] w-full min-w-0 flex flex-col gap-4 overflow-y-auto flex-1 pr-1 custom-scroll">
+        {isLoading && feedbacks.length === 0 ? (
+          <div className="text-t-muted text-sm p-4">Загрузка отзывов...</div>
+        ) : error ? (
+          <div className="text-t-red text-sm p-4">{error}</div>
+        ) : feedbacks.length === 0 ? (
+          <div className="text-t-muted text-sm p-4">
+            У вас еще нет полученных отзывов
+          </div>
+        ) : (
+          feedbacks.map((item, index) => (
+            <div key={item.id || index} className="w-full min-w-0 block">
+              <Review
+                title={item.text || "Без текста"}
+                UUID={item.box_uuid || "Неизвестный UUID"}
+                timeAgo={item.created_at || "Недавно"}
+              />
+            </div>
+          ))
+        )}
+      </div>
+    </div>
   );
 };

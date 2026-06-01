@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -9,13 +9,170 @@ import {
   Line,
 } from "recharts";
 import Card from "../../../small/card/card";
+import { API_BASE_URL } from "../../../../utils/api";
+
+interface FeedbackData {
+  id?: string | number;
+  text?: string;
+  box_uuid?: string;
+  created_at?: string; // Используем это поле для группировки
+  is_moderated?: boolean; // Предполагаем поле статуса
+}
+
+type PeriodType = "7 дней" | "14 дней" | "30 дней" | "Всё время";
 
 export default function ActivityChart() {
-  const [days, setDays] = useState<
-    "7 дней" | "14 дней" | "30 дней" | "Всё время"
-  >("7 дней");
+  const [days, setDays] = useState<PeriodType>("7 дней");
   const [isOpen, setIsOpen] = useState(false);
-  const currentData = chartDataByPeriod[days] || chartDataByPeriod["7 дней"];
+  const [feedbacks, setFeedbacks] = useState<FeedbackData[]>([]);
+
+  useEffect(() => {
+    const fetchFeedbacks = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/my-feedbacks`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setFeedbacks(data.feedbacks || []);
+        }
+      } catch (error) {
+        console.error("Ошибка при получении данных для графика:", error);
+      }
+    };
+
+    fetchFeedbacks();
+  }, []);
+
+  // Вычисляем данные для графика на основе полученных отзывов
+  const currentData = useMemo(() => {
+    if (feedbacks.length === 0) {
+      // Возвращаем пустую линию-заглушку, если отзывов еще нет в базе
+      return [{ day: "Нет данных", total: 0, moderated: 0, blocked: 0 }];
+    }
+
+    const now = new Date();
+
+    // Хелпер для обнуления часов (работаем только с датами)
+    const cloneDateWithoutTime = (d: Date) =>
+      new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+    // Функция генерации пустых точек для ровного шага осей
+    const generateEmptyDays = (count: number) => {
+      const result = [];
+      for (let i = count - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(now.getDate() - i);
+        const dayLabel = d.toLocaleDateString("ru-RU", {
+          day: "numeric",
+          month: "short",
+        });
+        result.push({
+          dateKey: cloneDateWithoutTime(d).getTime(),
+          day: dayLabel,
+          total: 0,
+          moderated: 0,
+          blocked: 0,
+        });
+      }
+      return result;
+    };
+
+    if (days === "7 дней") {
+      const base = generateEmptyDays(7);
+      feedbacks.forEach((item) => {
+        if (!item.created_at) return;
+        const fDate = cloneDateWithoutTime(new Date(item.created_at)).getTime();
+        const point = base.find((p) => p.dateKey === fDate);
+        if (point) {
+          point.total += 1;
+          if (item.is_moderated !== false) point.moderated += 1;
+          else point.blocked += 1;
+        }
+      });
+      return base;
+    }
+
+    if (days === "14 дней") {
+      const base = generateEmptyDays(14);
+      feedbacks.forEach((item) => {
+        if (!item.created_at) return;
+        const fDate = cloneDateWithoutTime(new Date(item.created_at)).getTime();
+        const point = base.find((p) => p.dateKey === fDate);
+        if (point) {
+          point.total += 1;
+          if (item.is_moderated !== false) point.moderated += 1;
+          else point.blocked += 1;
+        }
+      });
+      // Для 14 дней прореживаем подписи через одну, чтобы они не слипались
+      return base.map((p, idx) => ({ ...p, day: idx % 2 === 0 ? p.day : "" }));
+    }
+
+    if (days === "30 дней") {
+      const base = generateEmptyDays(30);
+      feedbacks.forEach((item) => {
+        if (!item.created_at) return;
+        const fDate = cloneDateWithoutTime(new Date(item.created_at)).getTime();
+        const point = base.find((p) => p.dateKey === fDate);
+        if (point) {
+          point.total += 1;
+          if (item.is_moderated !== false) point.moderated += 1;
+          else point.blocked += 1;
+        }
+      });
+      // Оставляем подписи только для каждой 5-й точки
+      return base.map((p, idx) => ({ ...p, day: idx % 5 === 0 ? p.day : "" }));
+    }
+
+    if (days === "Всё время") {
+      // Группируем по месяцам текущего года
+      const months = [
+        "Янв",
+        "Фев",
+        "Мар",
+        "Апр",
+        "Май",
+        "Июн",
+        "Июл",
+        "Авг",
+        "Сен",
+        "Окт",
+        "Ноя",
+        "Дек",
+      ];
+      const base = months.map((m, idx) => ({
+        monthIdx: idx,
+        day: m,
+        total: 0,
+        moderated: 0,
+        blocked: 0,
+      }));
+
+      feedbacks.forEach((item) => {
+        if (!item.created_at) return;
+        const fDate = new Date(item.created_at);
+        const point = base.find((p) => p.monthIdx === fDate.getMonth());
+        if (point) {
+          point.total += 1;
+          if (item.is_moderated !== false) point.moderated += 1;
+          else point.blocked += 1;
+        }
+      });
+      return base;
+    }
+
+    return [];
+  }, [feedbacks, days]);
+
   return (
     <Card className="h-full flex flex-col justify-between p-6!">
       <div className="flex flex-row justify-between items-center mb-2">
@@ -60,7 +217,6 @@ export default function ActivityChart() {
         </div>
       </div>
 
-      {/* ЛЕГЕНДА ГРАФИКА */}
       <div className="flex flex-row justify-center gap-6 text-xs text-t-muted mb-4">
         <div className="flex items-center gap-2">
           <span className="w-3 h-1 bg-t-blue rounded-full"></span>
@@ -76,10 +232,8 @@ export default function ActivityChart() {
         </div>
       </div>
 
-      {/* САМ ГРАФИК */}
       <div className="flex-1 w-full min-h-0 text-[11px] text-t-muted **:outline-none">
         <ResponsiveContainer width="100%" height="100%">
-          {/* Передаем динамический массив currentData вместо статичного data */}
           <LineChart
             data={currentData}
             margin={{ top: 5, right: 5, left: -25, bottom: 0 }}
@@ -97,7 +251,12 @@ export default function ActivityChart() {
               axisLine={false}
               dy={10}
             />
-            <YAxis stroke="#52525b" tickLine={false} axisLine={false} />
+            <YAxis
+              stroke="#52525b"
+              tickLine={false}
+              axisLine={false}
+              allowDecimals={false}
+            />
 
             <Tooltip
               cursor={false}
@@ -142,39 +301,5 @@ export default function ActivityChart() {
     </Card>
   );
 }
+
 const PERIODS = ["7 дней", "14 дней", "30 дней", "Всё время"] as const;
-const chartDataByPeriod = {
-  "7 дней": [
-    { day: "0", total: 45, moderated: 110, blocked: 180 },
-    { day: "1", total: 110, moderated: 40, blocked: 90 },
-    { day: "2", total: 175, moderated: 135, blocked: 80 },
-    { day: "3", total: 225, moderated: 120, blocked: 175 },
-    { day: "4", total: 105, moderated: 75, blocked: 105 },
-    { day: "5", total: 295, moderated: 160, blocked: 270 },
-    { day: "6", total: 255, moderated: 110, blocked: 105 },
-    { day: "7", total: 245, moderated: 140, blocked: 270 },
-  ],
-  "14 дней": [
-    { day: "2", total: 90, moderated: 50, blocked: 40 },
-    { day: "4", total: 140, moderated: 90, blocked: 110 },
-    { day: "6", total: 210, moderated: 150, blocked: 95 },
-    { day: "8", total: 180, moderated: 130, blocked: 160 },
-    { day: "10", total: 310, moderated: 220, blocked: 190 },
-    { day: "12", total: 280, moderated: 190, blocked: 140 },
-    { day: "14", total: 420, moderated: 310, blocked: 250 },
-  ],
-  "30 дней": [
-    { day: "5", total: 120, moderated: 80, blocked: 90 },
-    { day: "10", total: 230, moderated: 140, blocked: 160 },
-    { day: "15", total: 190, moderated: 110, blocked: 130 },
-    { day: "20", total: 340, moderated: 260, blocked: 210 },
-    { day: "25", total: 410, moderated: 320, blocked: 180 },
-    { day: "30", total: 560, moderated: 440, blocked: 290 },
-  ],
-  "Всё время": [
-    { day: "Кв1", total: 600, moderated: 450, blocked: 300 },
-    { day: "Кв2", total: 1200, moderated: 900, blocked: 550 },
-    { day: "Кв3", total: 1900, moderated: 1400, blocked: 800 },
-    { day: "Кв4", total: 2800, moderated: 2100, blocked: 1100 },
-  ],
-};
