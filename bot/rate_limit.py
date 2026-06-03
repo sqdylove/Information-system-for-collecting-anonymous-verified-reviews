@@ -25,4 +25,3 @@ class ActionRateLimiter:
         history.append(now)
         self.requests[key] = history
         return len(history) <= self.max_requests
-

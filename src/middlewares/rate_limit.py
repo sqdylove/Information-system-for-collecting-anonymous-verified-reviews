@@ -1,4 +1,5 @@
 from time import time
+
 from fastapi import HTTPException, status
 
 requests = {}
@@ -21,5 +22,5 @@ def check_rate(ip: str, route: str):
     if len(history) > MAX_REQUESTS:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many requests, please wait a minute"
+            detail="Too many requests, please wait a minute",
         )

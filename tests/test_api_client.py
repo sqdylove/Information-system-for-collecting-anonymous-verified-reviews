@@ -21,7 +21,7 @@ def test_api_client_retries_on_transient_http_errors():
     result = asyncio.run(client.create_box())
 
     assert result["uuid"] == "abc123"
-    assert result["owner_token"] == "tok"
+    assert result["owner_token"] == "tok"  # noqa: S105
     assert len(calls) == 2
 
 
