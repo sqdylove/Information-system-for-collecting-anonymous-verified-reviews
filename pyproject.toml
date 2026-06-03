@@ -1,0 +1,20 @@
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = 'black'
+line_length = 88
+known_first_party = ['src', 'tests', 'bot']
+
+[tool.ruff]
+line-length = 88
+target-version = 'py311'
+
+[tool.ruff.lint]
+select = ['E', 'F', 'W', 'I', 'C', 'B', 'RUF', 'S']
+ignore = ['E501']
+exclude = ['build', 'dist', '.git', '__pycache__', 'node_modules']
+
+per-file-ignores = { 'tests/*.py' = ['S101'] }

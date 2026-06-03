@@ -1,16 +1,18 @@
-import os
 import importlib
+import os
+
 from fastapi.testclient import TestClient
 
 os.environ.setdefault(
     "DATABASE_URL",
     "postgresql://admin:adminadmin@localhost:5433/anonymous",
 )
+
 import src.db.database as database
+from src.main import app
+
 importlib.reload(database)
 database.init_db()
-
-from src.main import app
 
 client = TestClient(app)
 
@@ -25,10 +27,14 @@ def test_full_box_lifecycle():
     uuid = data["uuid"]
     token = data["owner_token"]
 
-    invalid_feedback = client.post(f"/box/{uuid}/feedback", json={"text": "badword content"})
+    invalid_feedback = client.post(
+        f"/box/{uuid}/feedback", json={"text": "badword content"}
+    )
     assert invalid_feedback.status_code == 400
 
-    feedback = client.post(f"/box/{uuid}/feedback", json={"text": "Normal feedback text"})
+    feedback = client.post(
+        f"/box/{uuid}/feedback", json={"text": "Normal feedback text"}
+    )
     assert feedback.status_code == 200
     fb_data = feedback.json()
     assert fb_data["text"] == "Normal feedback text"
@@ -41,10 +47,18 @@ def test_full_box_lifecycle():
     assert owner_view.status_code == 200
     assert len(owner_view.json()["feedbacks"]) == 1
 
-    reply_fail = client.post(f"/feedback/{fb_data['id']}/reply", json={"text": "Owner reply"}, params={"token": "wrong"})
+    reply_fail = client.post(
+        f"/feedback/{fb_data['id']}/reply",
+        json={"text": "Owner reply"},
+        params={"token": "wrong"},
+    )
     assert reply_fail.status_code == 403
 
-    reply_ok = client.post(f"/feedback/{fb_data['id']}/reply", json={"text": "Owner reply"}, params={"token": token})
+    reply_ok = client.post(
+        f"/feedback/{fb_data['id']}/reply",
+        json={"text": "Owner reply"},
+        params={"token": token},
+    )
     assert reply_ok.status_code == 200
 
     owner_view_after = client.get(f"/box/{uuid}", params={"token": token})
@@ -54,7 +68,11 @@ def test_full_box_lifecycle():
 def test_auth_register_and_login():
     register_resp = client.post(
         "/auth/register",
-        json={"username": "testuser", "password": "secret123", "confirm_password": "secret123"},
+        json={
+            "username": "testuser",
+            "password": "secret123",
+            "confirm_password": "secret123",
+        },
     )
     assert register_resp.status_code == 201
     register_data = register_resp.json()
@@ -78,7 +96,11 @@ def test_auth_register_and_login():
 
     duplicate_register = client.post(
         "/auth/register",
-        json={"username": "testuser", "password": "secret123", "confirm_password": "secret123"},
+        json={
+            "username": "testuser",
+            "password": "secret123",
+            "confirm_password": "secret123",
+        },
     )
     assert duplicate_register.status_code == 400
 
@@ -96,7 +118,9 @@ def test_auth_register_and_login():
     assert my_boxes_resp.status_code == 200
     assert my_boxes_resp.json()["boxes"] == []
 
-    created_box = client.post("/box", headers={"Authorization": f"Bearer {register_data['token']}"})
+    created_box = client.post(
+        "/box", headers={"Authorization": f"Bearer {register_data['token']}"}
+    )
     assert created_box.status_code == 200
 
     my_boxes_after = client.get(
@@ -125,8 +149,7 @@ def test_auth_register_and_login():
     )
     assert my_feedbacks_after.status_code == 200
     assert len(my_feedbacks_after.json()["feedbacks"]) == 1
-    assert my_feedbacks_after.json()["feedbacks"][0]["box_uuid"] == created_box.json()["uuid"]
-
-
-
-
+    assert (
+        my_feedbacks_after.json()["feedbacks"][0]["box_uuid"]
+        == created_box.json()["uuid"]
+    )

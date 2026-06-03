@@ -1,6 +1,10 @@
 __pycache__/
 .env
+.venv/
 *.pyc
 *.log
 *.db
 .DS_Store
+frontend/node_modules/
+frontend/dist/
+frontend/dist-electron/

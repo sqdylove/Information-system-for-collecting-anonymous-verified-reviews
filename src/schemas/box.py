@@ -1,5 +1,7 @@
 from typing import List
+
 from pydantic import BaseModel, ConfigDict
+
 
 class BoxCreateResponse(BaseModel):
     uuid: str
@@ -7,16 +9,19 @@ class BoxCreateResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class BoxUuidOut(BaseModel):
     uuid: str
     created_at: str
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class UserBoxesResponse(BaseModel):
     boxes: List[BoxUuidOut] = []
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class ReplyOut(BaseModel):
     id: int
@@ -24,6 +29,7 @@ class ReplyOut(BaseModel):
     created_at: str
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class FeedbackShortOut(BaseModel):
     id: int
@@ -36,10 +42,12 @@ class FeedbackShortOut(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class UserFeedbacksResponse(BaseModel):
     feedbacks: List[FeedbackShortOut] = []
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class FeedbackOut(BaseModel):
     id: int
@@ -50,6 +58,7 @@ class FeedbackOut(BaseModel):
     replies: List[ReplyOut] = []
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class BoxFeedbacksResponse(BaseModel):
     uuid: str
