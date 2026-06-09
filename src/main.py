@@ -39,10 +39,6 @@ def custom_openapi():
         "scheme": "bearer",
         "bearerFormat": "token",
     }
-    for path in openapi_schema.get("paths", {}).values():
-        for operation in path.values():
-            if isinstance(operation, dict):
-                operation.setdefault("security", []).append({"BearerAuth": []})
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
